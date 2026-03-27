@@ -460,6 +460,21 @@ nav {
 }
 .nb-close:hover { color: var(--red); }
 
+/* Speed */
+.nb-speed { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.nb-speed-btn {
+  padding: 4px 9px; border-radius: 6px;
+  border: 1px solid var(--b1); background: none;
+  font-size: .68rem; font-weight: 700; color: var(--t2);
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer; transition: all .18s; line-height: 1.4;
+}
+.nb-speed-btn:hover { border-color: var(--b2); color: var(--t1); }
+.nb-speed-btn.active {
+  background: var(--green-dim); border-color: rgba(61,214,140,.35);
+  color: var(--green);
+}
+
 /* ══════════════════════════════════════════
    MODAL (PDF / OTHER)
 ══════════════════════════════════════════ */
@@ -568,7 +583,7 @@ nav {
   .sidebar { display: none; }
   nav { padding: 0 16px; }
   .content { padding: 16px 14px; padding-bottom: calc(var(--bar-h) + 16px); }
-  .nb-progress, .nb-vol, .nb-controls .nb-ctrl-btn { display: none; }
+  .nb-progress, .nb-vol, .nb-speed, .nb-controls .nb-ctrl-btn { display: none; }
   #nowBar { gap: 12px; padding: 0 16px; }
 }
 </style>
@@ -660,6 +675,14 @@ nav {
   <div class="nb-vol">
     <span class="nb-vol-icon" id="nbVolIcon" onclick="nbMuteToggle()">🔊</span>
     <input class="nb-vol-slider" type="range" min="0" max="1" step="0.02" value="1" id="nbVolSlider" oninput="nbSetVolume(this.value)">
+  </div>
+
+  <div class="nb-speed" id="nbSpeed">
+    <button class="nb-speed-btn" onclick="nbSetSpeed(0.75)">0.75×</button>
+    <button class="nb-speed-btn active" onclick="nbSetSpeed(1)">1×</button>
+    <button class="nb-speed-btn" onclick="nbSetSpeed(1.25)">1.25×</button>
+    <button class="nb-speed-btn" onclick="nbSetSpeed(1.5)">1.5×</button>
+    <button class="nb-speed-btn" onclick="nbSetSpeed(2)">2×</button>
   </div>
 
   <button class="nb-close" onclick="nbStop()" title="Kapat">✕</button>
@@ -1030,6 +1053,9 @@ function playAudio(id, name, lesson) {
   audio.crossOrigin = 'anonymous';
   audio.src = src;
   audio.volume = parseFloat($('nbVolSlider').value) || 1;
+  // preserve current speed
+  const activeSpeedBtn = document.querySelector('.nb-speed-btn.active');
+  if (activeSpeedBtn) audio.playbackRate = parseFloat(activeSpeedBtn.textContent) || 1;
 
   playingId     = id;
   playingLesson = lesson;
@@ -1120,6 +1146,13 @@ function nbSetVolume(v) {
   if (audio) audio.volume = lastVol;
   $('nbVolIcon').textContent = lastVol < 0.01 ? '🔇' : lastVol < 0.5 ? '🔉' : '🔊';
   isMuted = lastVol < 0.01;
+}
+
+function nbSetSpeed(rate) {
+  if (audio) audio.playbackRate = rate;
+  document.querySelectorAll('.nb-speed-btn').forEach(b => {
+    b.classList.toggle('active', parseFloat(b.textContent) === rate);
+  });
 }
 
 function nbMuteToggle() {
