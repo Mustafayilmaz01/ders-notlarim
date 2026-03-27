@@ -4,559 +4,329 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ders Arşivim</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0f0e0c;
-    --surface: #1a1916;
-    --card: #222018;
-    --border: #2e2c27;
-    --accent: #c9a84c;
-    --accent2: #8b6914;
-    --text: #e8e4d9;
-    --muted: #7a7567;
-    --danger: #c0392b;
-  }
+:root {
+  --bg:       #09090b;
+  --surface:  #111113;
+  --card:     #16161a;
+  --border:   #242429;
+  --accent:   #6ee7b7;
+  --accent2:  #34d399;
+  --red:      #f87171;
+  --blue:     #7dd3fc;
+  --yellow:   #fcd34d;
+  --purple:   #c4b5fd;
+  --text:     #e4e4e7;
+  --muted:    #52525b;
+  --muted2:   #3f3f46;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Instrument Sans',sans-serif;
+  min-height:100vh;overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:.4;
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* HEADER */
+header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(9,9,11,.88);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:18px 32px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem;
+  letter-spacing:-0.5px;color:var(--text);
+  display:flex;align-items:center;gap:10px;
+}
+.logo-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);box-shadow:0 0 12px var(--accent);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.header-right{display:flex;align-items:center;gap:10px;}
+.status-pill{
+  font-size:.72rem;color:var(--muted);
+  border:1px solid var(--border);border-radius:20px;padding:4px 12px;
+}
+.status-pill.ok {color:var(--accent);border-color:rgba(110,231,183,.25);}
+.status-pill.err{color:var(--red);  border-color:rgba(248,113,113,.25);}
+.refresh-btn{
+  background:var(--accent);color:#09090b;border:none;border-radius:8px;
+  padding:9px 18px;font-family:'Syne',sans-serif;font-weight:600;font-size:.82rem;
+  cursor:pointer;transition:all .2s;letter-spacing:.3px;
+}
+.refresh-btn:hover{background:var(--accent2);transform:translateY(-1px);}
+.refresh-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-  }
+/* CONFIG BANNER */
+.config-banner{
+  background:rgba(252,211,77,.05);border:1px solid rgba(252,211,77,.15);
+  border-radius:12px;padding:20px 24px;margin:24px auto;max-width:900px;
+  display:flex;align-items:flex-start;gap:14px;
+}
+.config-banner.hidden{display:none;}
+.config-icon{font-size:1.5rem;flex-shrink:0;margin-top:2px;}
+.config-text h3{
+  font-family:'Syne',sans-serif;font-weight:700;
+  color:var(--yellow);font-size:.95rem;margin-bottom:8px;
+}
+.config-text p{font-size:.83rem;color:#a1a1aa;line-height:1.7;}
+.config-text code{
+  background:rgba(255,255,255,.06);border:1px solid var(--border);
+  border-radius:4px;padding:1px 6px;font-family:monospace;
+  font-size:.82rem;color:var(--yellow);
+}
 
-  /* ── HEADER ── */
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 20px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  header h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.5rem;
-    color: var(--accent);
-    letter-spacing: 0.5px;
-  }
-  header p { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+/* CONTAINER */
+.container{max-width:1140px;margin:0 auto;padding:32px 20px;position:relative;z-index:1;}
 
-  .add-btn {
-    background: var(--accent);
-    color: #0f0e0c;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 500;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .add-btn:hover { background: #e0bb62; }
+/* TOOLBAR */
+.toolbar{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;align-items:center;}
+.search-wrap{flex:1;min-width:220px;position:relative;}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.9rem;pointer-events:none;}
+.search-box{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:10px 14px 10px 38px;color:var(--text);
+  font-family:'Instrument Sans',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s;
+}
+.search-box:focus{border-color:var(--accent);}
+.search-box::placeholder{color:var(--muted);}
+.type-filters{display:flex;gap:6px;flex-wrap:wrap;}
+.filt{
+  display:flex;align-items:center;gap:6px;
+  background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  padding:8px 14px;border-radius:8px;cursor:pointer;font-size:.8rem;
+  font-family:'Instrument Sans',sans-serif;transition:all .2s;white-space:nowrap;
+}
+.filt.active{border-color:var(--accent);color:var(--accent);background:rgba(110,231,183,.06);}
+.filt-dot{width:6px;height:6px;border-radius:50%;}
 
-  /* ── LAYOUT ── */
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 32px 20px;
-  }
+/* STATS */
+.stats{display:flex;gap:6px;margin-bottom:28px;flex-wrap:wrap;}
+.stat{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:8px 16px;font-size:.78rem;color:var(--muted);
+  display:flex;align-items:center;gap:6px;
+}
+.stat strong{color:var(--text);font-weight:500;}
 
-  /* ── SEARCH / FILTER ── */
-  .toolbar {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 28px;
-    flex-wrap: wrap;
-  }
-  .search-box {
-    flex: 1;
-    min-width: 200px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 16px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .search-box:focus { border-color: var(--accent); }
-  .search-box::placeholder { color: var(--muted); }
+/* LESSON SECTIONS */
+.lesson-section{margin-bottom:44px;}
+.lesson-header{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:16px;padding-bottom:14px;
+  border-bottom:1px solid var(--border);
+}
+.lesson-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--text);}
+.lesson-count{
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:20px;padding:2px 10px;font-size:.72rem;color:var(--muted);
+}
 
-  .filter-btn {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    padding: 10px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-family: 'DM Sans', sans-serif;
-    transition: all 0.2s;
-  }
-  .filter-btn.active {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: rgba(201,168,76,0.08);
-  }
+/* FILE GRID */
+.file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:12px;}
 
-  /* ── GRID ── */
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
-  }
+/* FILE CARD */
+.file-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;
+  transition:transform .2s,box-shadow .2s,border-color .2s;
+  animation:fadeUp .35s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.file-card:not(.audio){cursor:pointer;}
+.file-card:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.5);}
+.file-card.audio:hover{border-color:rgba(110,231,183,.3);}
+.file-card.pdf:hover  {border-color:rgba(248,113,113,.3);}
+.file-card.pptx:hover {border-color:rgba(252,211,77,.3);}
+.file-card.other:hover{border-color:rgba(125,211,252,.3);}
 
-  /* ── CARD ── */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-    animation: fadeIn 0.3s ease;
-  }
-  .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.4);
-  }
+.file-thumb{
+  height:86px;display:flex;align-items:center;justify-content:center;
+  font-size:2.2rem;position:relative;
+}
+.file-thumb.audio{background:rgba(110,231,183,.07);}
+.file-thumb.pdf  {background:rgba(248,113,113,.07);}
+.file-thumb.pptx {background:rgba(252,211,77,.07);}
+.file-thumb.other{background:rgba(125,211,252,.07);}
+.type-badge{
+  position:absolute;top:8px;right:8px;font-size:.6rem;font-weight:700;
+  letter-spacing:.6px;padding:2px 7px;border-radius:4px;
+  font-family:'Syne',sans-serif;text-transform:uppercase;
+}
+.audio .type-badge{background:rgba(110,231,183,.15);color:var(--accent);}
+.pdf   .type-badge{background:rgba(248,113,113,.15);color:var(--red);}
+.pptx  .type-badge{background:rgba(252,211,77,.15); color:var(--yellow);}
+.other .type-badge{background:rgba(125,211,252,.15);color:var(--blue);}
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
+.file-info{padding:10px 12px 12px;}
+.file-name{
+  font-size:.8rem;color:var(--text);line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  margin-bottom:8px;
+}
+.file-meta{
+  font-size:.7rem;color:var(--muted);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.open-hint{color:var(--accent);font-size:.7rem;}
 
-  .card-header {
-    padding: 18px 20px 14px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-  .card-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.05rem;
-    color: var(--text);
-    line-height: 1.3;
-  }
-  .card-date {
-    font-size: 0.75rem;
-    color: var(--muted);
-    margin-top: 4px;
-  }
-  .card-tag {
-    background: rgba(201,168,76,0.12);
-    color: var(--accent);
-    font-size: 0.7rem;
-    padding: 3px 10px;
-    border-radius: 20px;
-    border: 1px solid rgba(201,168,76,0.25);
-    white-space: nowrap;
-  }
+/* AUDIO PLAYER */
+.audio-player{
+  padding:10px 12px;border-top:1px solid var(--border);
+  background:rgba(110,231,183,.03);
+}
+.player-controls{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.play-btn{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--accent);border:none;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:background .2s;
+}
+.play-btn:hover{background:var(--accent2);}
+.play-btn svg{fill:#09090b;}
+.progress-wrap{flex:1;height:3px;background:var(--border);border-radius:2px;cursor:pointer;}
+.progress-bar{height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width .1s;}
+.audio-time{font-size:.68rem;color:var(--muted);flex-shrink:0;}
 
-  .card-body { padding: 16px 20px; }
+/* STATE BOX */
+.state-box{text-align:center;padding:80px 20px;}
+.state-box .icon{font-size:3rem;margin-bottom:16px;}
+.state-box h3{
+  font-family:'Syne',sans-serif;font-weight:700;
+  color:var(--text);margin-bottom:8px;font-size:1.1rem;
+}
+.state-box p{font-size:.85rem;color:var(--muted);line-height:1.6;}
+.spinner{
+  width:36px;height:36px;border:3px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin 1s linear infinite;margin:0 auto 16px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  /* Audio player */
-  .audio-section {
-    margin-bottom: 14px;
-  }
-  .audio-label {
-    font-size: 0.72rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 6px;
-  }
-  .custom-audio {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 14px;
-  }
-  .play-btn {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    background: var(--accent);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: background 0.2s;
-  }
-  .play-btn:hover { background: #e0bb62; }
-  .play-btn svg { fill: #0f0e0c; }
+/* MODAL */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.82);z-index:200;
+  align-items:center;justify-content:center;padding:20px;
+}
+.overlay.open{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;width:100%;max-width:860px;height:88vh;
+  display:flex;flex-direction:column;overflow:hidden;
+  animation:slideUp .25s ease;
+}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.modal-head h3{
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:75%;
+}
+.modal-btns{display:flex;gap:8px;}
+.mbtn{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  border-radius:7px;padding:6px 12px;font-size:.78rem;cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;transition:all .2s;
+}
+.mbtn:hover.close{color:var(--red);border-color:var(--red);}
+.mbtn:hover.open {color:var(--accent);border-color:var(--accent);}
+.modal-body{flex:1;overflow:hidden;}
+.modal-body iframe{width:100%;height:100%;border:none;}
 
-  .audio-info { flex: 1; min-width: 0; }
-  .audio-name {
-    font-size: 0.8rem;
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .progress-wrap {
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    margin-top: 6px;
-    cursor: pointer;
-    position: relative;
-  }
-  .progress-bar {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-    width: 0%;
-    transition: width 0.1s;
-  }
-  .audio-time { font-size: 0.72rem; color: var(--muted); flex-shrink: 0; }
-
-  /* Notes */
-  .notes-section {}
-  .notes-label {
-    font-size: 0.72rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 8px;
-  }
-  .notes-content {
-    font-size: 0.85rem;
-    color: #b5b09f;
-    line-height: 1.6;
-    max-height: 80px;
-    overflow: hidden;
-    position: relative;
-  }
-  .notes-content.expanded { max-height: none; }
-  .read-more {
-    color: var(--accent);
-    font-size: 0.78rem;
-    cursor: pointer;
-    margin-top: 4px;
-    display: inline-block;
-  }
-
-  /* Files */
-  .files-section { margin-top: 12px; }
-  .file-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 0.75rem;
-    color: var(--muted);
-    margin: 3px 3px 0 0;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-decoration: none;
-  }
-  .file-chip:hover { border-color: var(--accent); color: var(--accent); }
-
-  .card-footer {
-    padding: 12px 20px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-  }
-  .icon-btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.78rem;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    transition: all 0.2s;
-  }
-  .icon-btn:hover { color: var(--accent); border-color: var(--accent); }
-  .icon-btn.del:hover { color: var(--danger); border-color: var(--danger); }
-
-  /* Empty state */
-  .empty {
-    text-align: center;
-    padding: 80px 20px;
-    color: var(--muted);
-    grid-column: 1/-1;
-  }
-  .empty-icon { font-size: 3rem; margin-bottom: 16px; }
-  .empty h3 { font-family: 'Playfair Display', serif; color: var(--text); margin-bottom: 8px; }
-
-  /* ── MODAL ── */
-  .overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-  .overlay.open { display: flex; }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    width: 100%;
-    max-width: 520px;
-    max-height: 90vh;
-    overflow-y: auto;
-    animation: slideUp 0.25s ease;
-  }
-  @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
-  }
-  .modal h2 {
-    font-family: 'Playfair Display', serif;
-    color: var(--accent);
-    margin-bottom: 22px;
-    font-size: 1.2rem;
-  }
-
-  label {
-    display: block;
-    font-size: 0.78rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
-    margin-bottom: 6px;
-    margin-top: 16px;
-  }
-  label:first-of-type { margin-top: 0; }
-
-  input[type=text], textarea, select {
-    width: 100%;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
-  select option { background: var(--card); }
-  textarea { resize: vertical; min-height: 90px; }
-
-  .file-input-wrap {
-    background: var(--card);
-    border: 1px dashed var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.2s;
-    font-size: 0.85rem;
-    color: var(--muted);
-  }
-  .file-input-wrap:hover { border-color: var(--accent); }
-  .file-input-wrap input { display: none; }
-  .selected-files { margin-top: 8px; font-size: 0.78rem; color: var(--accent); }
-
-  .modal-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 24px;
-    justify-content: flex-end;
-  }
-  .btn-cancel {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
-    cursor: pointer;
-  }
-  .btn-save {
-    background: var(--accent);
-    color: #0f0e0c;
-    border: none;
-    padding: 10px 24px;
-    border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .btn-save:hover { background: #e0bb62; }
-
-  /* Links */
-  .link-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    align-items: center;
-  }
-  .link-row input { margin: 0; }
-  .link-label-input { flex: 0 0 110px !important; }
-  .link-url-input   { flex: 1 !important; }
-  .link-del-btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    border-radius: 6px;
-    width: 32px; height: 36px;
-    cursor: pointer;
-    font-size: 1rem;
-    flex-shrink: 0;
-    transition: all 0.2s;
-  }
-  .link-del-btn:hover { color: var(--danger); border-color: var(--danger); }
-
-  .add-link-btn {
-    background: none;
-    border: 1px dashed var(--border);
-    color: var(--accent);
-    border-radius: 8px;
-    padding: 7px 14px;
-    font-size: 0.82rem;
-    font-family: 'DM Sans', sans-serif;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 2px;
-    transition: all 0.2s;
-  }
-  .add-link-btn:hover { border-color: var(--accent); background: rgba(201,168,76,0.06); }
-
-  /* Link chips on card */
-  .link-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: rgba(201,168,76,0.07);
-    border: 1px solid rgba(201,168,76,0.2);
-    border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 0.75rem;
-    color: var(--accent);
-    margin: 3px 3px 0 0;
-    text-decoration: none;
-    transition: all 0.2s;
-  }
-  .link-chip:hover { background: rgba(201,168,76,0.15); border-color: var(--accent); }
-
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--accent);
-    color: #0f0e0c;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    z-index: 999;
-    transform: translateY(80px);
-    opacity: 0;
-    transition: all 0.3s;
-  }
-  .toast.show { transform: translateY(0); opacity: 1; }
-
-  /* Section count */
-  .section-title {
-    font-size: 0.72rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 18px;
-  }
-  .section-title span {
-    color: var(--accent);
-    margin-left: 6px;
-  }
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--accent);color:#09090b;
+  padding:11px 18px;border-radius:8px;font-size:.82rem;font-weight:600;
+  z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;
+  font-family:'Syne',sans-serif;
+}
+.toast.show{transform:translateY(0);opacity:1;}
 </style>
 </head>
 <body>
 
 <header>
-  <div>
-    <h1>📚 Ders Arşivim</h1>
-    <p>Notlar · Ses Kayıtları · Dosyalar</p>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Ders Arşivim
   </div>
-  <button class="add-btn" onclick="openModal()">+ Yeni Ders Ekle</button>
+  <div class="header-right">
+    <span class="status-pill" id="statusPill">⏳ Bağlanıyor…</span>
+    <button class="refresh-btn" id="refreshBtn" onclick="loadDrive()" disabled>↻ Yenile</button>
+  </div>
 </header>
 
 <div class="container">
-  <div class="toolbar">
-    <input class="search-box" id="searchInput" placeholder="🔍 Ders ara..." oninput="renderCards()">
-    <button class="filter-btn active" data-tag="all" onclick="setFilter(this,'all')">Tümü</button>
-    <button class="filter-btn" data-tag="Matematik" onclick="setFilter(this,'Matematik')">Matematik</button>
-    <button class="filter-btn" data-tag="Fizik" onclick="setFilter(this,'Fizik')">Fizik</button>
-    <button class="filter-btn" data-tag="Kimya" onclick="setFilter(this,'Kimya')">Kimya</button>
-    <button class="filter-btn" data-tag="Biyoloji" onclick="setFilter(this,'Biyoloji')">Biyoloji</button>
-    <button class="filter-btn" data-tag="Diğer" onclick="setFilter(this,'Diğer')">Diğer</button>
+
+  <div class="config-banner" id="configBanner">
+    <div class="config-icon">⚙️</div>
+    <div class="config-text">
+      <h3>Kurulum — Dosyada 2 Satırı Değiştir</h3>
+      <p>
+        Dosyanın en altındaki <code>&lt;script&gt;</code> bloğunda şu iki satırı bul ve doldur:<br><br>
+        <code>const API_KEY = 'BURAYA_API_KEY_YAZ';</code><br>
+        <code>const FOLDER_ID = 'BURAYA_KLASOR_ID_YAZ';</code><br><br>
+        <strong>API Key:</strong> console.cloud.google.com → APIs & Services → Credentials → Create API Key<br>
+        <strong>Klasör ID:</strong> Drive klasörünü aç → adres çubuğundaki son kısım →
+        drive.google.com/drive/folders/<strong style="color:var(--yellow)">BURASI</strong><br><br>
+        Drive klasörünü <strong>"Bağlantıya sahip herkes → Görüntüleyici"</strong> olarak paylaş.
+      </p>
+    </div>
   </div>
 
-  <div class="section-title">Dersler <span id="count">0</span></div>
-  <div class="grid" id="grid"></div>
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-box" id="searchInput" placeholder="Dosya veya ders adı ara…" oninput="render()">
+    </div>
+    <div class="type-filters">
+      <button class="filt active" onclick="setType(this,'all')">
+        <span class="filt-dot" style="background:#71717a"></span> Tümü
+      </button>
+      <button class="filt" onclick="setType(this,'audio')">
+        <span class="filt-dot" style="background:var(--accent)"></span> Ses
+      </button>
+      <button class="filt" onclick="setType(this,'pdf')">
+        <span class="filt-dot" style="background:var(--red)"></span> PDF
+      </button>
+      <button class="filt" onclick="setType(this,'pptx')">
+        <span class="filt-dot" style="background:var(--yellow)"></span> Slayt
+      </button>
+      <button class="filt" onclick="setType(this,'other')">
+        <span class="filt-dot" style="background:var(--blue)"></span> Diğer
+      </button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div id="main"></div>
 </div>
 
-<!-- MODAL -->
-<div class="overlay" id="overlay" onclick="closeOnOverlay(event)">
+<!-- PREVIEW MODAL -->
+<div class="overlay" id="overlay" onclick="closeOnBg(event)">
   <div class="modal">
-    <h2 id="modalTitle">Yeni Ders Ekle</h2>
-
-    <label>Ders Adı</label>
-    <input type="text" id="fTitle" placeholder="örn: Türev — Zincir Kuralı">
-
-    <label>Konu / Ders</label>
-    <select id="fTag">
-      <option>Matematik</option>
-      <option>Fizik</option>
-      <option>Kimya</option>
-      <option>Biyoloji</option>
-      <option>Diğer</option>
-    </select>
-
-    <label>Notlar</label>
-    <textarea id="fNotes" placeholder="Bu derste işlenen konuları buraya yaz..."></textarea>
-
-    <label>Ses Kaydı (MP3, M4A, WAV)</label>
-    <div class="file-input-wrap" onclick="document.getElementById('fAudio').click()">
-      🎙️ Ses dosyası seç veya buraya tıkla
-      <input type="file" id="fAudio" accept="audio/*" onchange="previewAudio(this)">
-      <div class="selected-files" id="audioName"></div>
+    <div class="modal-head">
+      <h3 id="modalTitle">—</h3>
+      <div class="modal-btns">
+        <button class="mbtn open" onclick="openInDrive()">↗ Drive'da aç</button>
+        <button class="mbtn close" onclick="closeModal()">✕ Kapat</button>
+      </div>
     </div>
-
-    <label>Ek Dosyalar (PDF, görsel, vb.)</label>
-    <div class="file-input-wrap" onclick="document.getElementById('fFiles').click()">
-      📎 Dosya seç (birden fazla seçebilirsin)
-      <input type="file" id="fFiles" multiple onchange="previewFiles(this)">
-      <div class="selected-files" id="filesName"></div>
-    </div>
-
-    <label>🔗 Kalıcı Linkler (Google Drive, Dropbox, YouTube vb.)</label>
-    <div id="linksContainer"></div>
-    <button type="button" class="add-link-btn" onclick="addLinkRow()">+ Link ekle</button>
-
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">İptal</button>
-      <button class="btn-save" onclick="saveLesson()">Kaydet</button>
+    <div class="modal-body">
+      <iframe id="modalFrame" src="about:blank" allowfullscreen></iframe>
     </div>
   </div>
 </div>
@@ -564,312 +334,267 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── State ───────────────────────────────────────
-let lessons = JSON.parse(localStorage.getItem('dersler') || '[]');
-let editingId = null;
-let activeFilter = 'all';
-let audioBlobs = {}; // id -> blob URL
-let fileBlobs  = {}; // id -> [{name, url}]
+// ╔═══════════════════════════════════════╗
+// ║  BURAYA GİR — sadece bu 2 satır      ║
+// ╠═══════════════════════════════════════╣
+const API_KEY   = 'AIzaSyDBWNz1aWUyBDy7VfZy7ca7Y9MdtjXVdf8';
+const FOLDER_ID = '1c9xW5CggYFkTxXD5ZHYgvAiXJNhfqy_m';
+// ╚═══════════════════════════════════════╝
 
-// ─── Persist ─────────────────────────────────────
-function save() {
-  localStorage.setItem('dersler', JSON.stringify(lessons));
+// ── State ──────────────────────────────
+let allLessons = [];
+let activeType = 'all';
+const audioEls = {};
+let currentDriveUrl = '';
+
+// ── Utils ──────────────────────────────
+const $  = id => document.getElementById(id);
+
+function fileType(mime, name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (mime.startsWith('audio/') || ['mp3','m4a','wav','ogg','aac'].includes(ext)) return 'audio';
+  if (mime === 'application/pdf' || ext === 'pdf') return 'pdf';
+  if (mime.includes('presentation') || ['pptx','ppt'].includes(ext)) return 'pptx';
+  return 'other';
 }
+function typeEmoji(t){ return {audio:'🎙',pdf:'📄',pptx:'📊',other:'📁'}[t]||'📁'; }
+function typeLabel(t){ return {audio:'SES',pdf:'PDF',pptx:'SLAYT',other:'DOSYA'}[t]||'DOSYA'; }
+function fmtSize(b){
+  if(!b||isNaN(b)) return '';
+  return b<1048576 ? (b/1024).toFixed(0)+' KB' : (b/1048576).toFixed(1)+' MB';
+}
+function fmt(s){
+  if(!isFinite(s)||isNaN(s)) return '0:00';
+  return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+}
+function playIcon() { return '<path d="M8 5v14l11-7z"/>'; }
+function pauseIcon(){ return '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; }
 
-// ─── Toast ───────────────────────────────────────
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
+function showToast(msg){
+  const t=$('toast'); t.textContent=msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+function setStatus(msg,ok=null){
+  const p=$('statusPill'); p.textContent=msg;
+  p.className='status-pill'+(ok===true?' ok':ok===false?' err':'');
 }
 
-// ─── Filter ──────────────────────────────────────
-function setFilter(btn, tag) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  activeFilter = tag;
-  renderCards();
+// ── Drive API ──────────────────────────
+async function listFolder(folderId){
+  let files=[], token='';
+  do{
+    const url=`https://www.googleapis.com/drive/v3/files`+
+      `?q='${folderId}'+in+parents+and+trashed=false`+
+      `&fields=nextPageToken,files(id,name,mimeType,size)`+
+      `&pageSize=200&key=${API_KEY}`+(token?`&pageToken=${token}`:'');
+    const r=await fetch(url);
+    if(!r.ok){ const e=await r.json(); throw new Error(e.error?.message||'API Hatası'); }
+    const d=await r.json();
+    files=[...files,...d.files];
+    token=d.nextPageToken||'';
+  }while(token);
+  return files;
 }
 
-// ─── Modal ───────────────────────────────────────
-function openModal(id = null) {
-  editingId = id;
-  document.getElementById('modalTitle').textContent = id ? 'Dersi Düzenle' : 'Yeni Ders Ekle';
-  document.getElementById('audioName').textContent = '';
-  document.getElementById('filesName').textContent = '';
-  document.getElementById('fAudio').value = '';
-  document.getElementById('fFiles').value = '';
-
-  if (id) {
-    const l = lessons.find(x => x.id === id);
-    document.getElementById('fTitle').value = l.title;
-    document.getElementById('fTag').value   = l.tag;
-    document.getElementById('fNotes').value = l.notes;
-    document.getElementById('linksContainer').innerHTML = '';
-    (l.links || []).forEach(lk => addLinkRow(lk.label, lk.url));
-    if (audioBlobs[id]) document.getElementById('audioName').textContent = '✓ Mevcut ses kaydı var';
-    if (fileBlobs[id]?.length) document.getElementById('filesName').textContent = `✓ ${fileBlobs[id].length} dosya var`;
-  } else {
-    document.getElementById('fTitle').value = '';
-    document.getElementById('fTag').value   = 'Matematik';
-    document.getElementById('fNotes').value = '';
-    document.getElementById('linksContainer').innerHTML = '';
-  }
-  document.getElementById('overlay').classList.add('open');
-}
-
-function closeModal() {
-  document.getElementById('overlay').classList.remove('open');
-  editingId = null;
-}
-function closeOnOverlay(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
-
-function previewAudio(input) {
-  const f = input.files[0];
-  document.getElementById('audioName').textContent = f ? `✓ ${f.name}` : '';
-}
-function previewFiles(input) {
-  const names = [...input.files].map(f => f.name).join(', ');
-  document.getElementById('filesName').textContent = names ? `✓ ${names}` : '';
-}
-
-function addLinkRow(label = '', url = '') {
-  const container = document.getElementById('linksContainer');
-  const row = document.createElement('div');
-  row.className = 'link-row';
-  row.innerHTML = `
-    <input type="text" class="link-label-input" placeholder="Etiket (ör: Ses Kaydı)" value="${label}">
-    <input type="text" class="link-url-input"   placeholder="https://..." value="${url}">
-    <button type="button" class="link-del-btn" onclick="this.parentElement.remove()">✕</button>
-  `;
-  container.appendChild(row);
-}
-
-function getLinks() {
-  return [...document.querySelectorAll('#linksContainer .link-row')].map(row => {
-    const inputs = row.querySelectorAll('input');
-    return { label: inputs[0].value.trim() || 'Link', url: inputs[1].value.trim() };
-  }).filter(l => l.url);
-}
-
-function linkIcon(url) {
-  if (url.includes('drive.google'))  return '📁';
-  if (url.includes('dropbox'))       return '📦';
-  if (url.includes('youtube') || url.includes('youtu.be')) return '▶️';
-  if (url.includes('docs.google'))   return '📄';
-  return '🔗';
-}
-
-
-  const title = document.getElementById('fTitle').value.trim();
-  if (!title) { showToast('Ders adı boş olamaz!'); return; }
-
-  const id = editingId || Date.now().toString();
-  const lesson = {
-    id,
-    title,
-    tag:   document.getElementById('fTag').value,
-    notes: document.getElementById('fNotes').value,
-    links: getLinks(),
-    date:  editingId ? (lessons.find(x=>x.id===id)?.date || new Date().toLocaleDateString('tr-TR')) : new Date().toLocaleDateString('tr-TR'),
-  };
-
-  // Audio blob
-  const aFile = document.getElementById('fAudio').files[0];
-  if (aFile) audioBlobs[id] = URL.createObjectURL(aFile);
-
-  // Extra files
-  const fFiles = [...document.getElementById('fFiles').files];
-  if (fFiles.length) {
-    fileBlobs[id] = fFiles.map(f => ({ name: f.name, url: URL.createObjectURL(f) }));
-  }
-
-  if (editingId) {
-    const idx = lessons.findIndex(x => x.id === editingId);
-    lessons[idx] = lesson;
-  } else {
-    lessons.unshift(lesson);
-  }
-
-  save();
-  closeModal();
-  renderCards();
-  showToast(editingId ? 'Ders güncellendi ✓' : 'Ders eklendi ✓');
-}
-
-function deleteLesson(id) {
-  if (!confirm('Bu dersi silmek istediğine emin misin?')) return;
-  lessons = lessons.filter(x => x.id !== id);
-  delete audioBlobs[id];
-  delete fileBlobs[id];
-  save();
-  renderCards();
-  showToast('Ders silindi.');
-}
-
-// ─── Audio Players ───────────────────────────────
-const players = {};
-
-function togglePlay(id) {
-  const audio = players[id];
-  if (!audio) return;
-  const btn = document.querySelector(`#play-${id} svg`);
-  if (audio.paused) {
-    // pause all others
-    Object.values(players).forEach(a => a.pause());
-    document.querySelectorAll('.play-btn svg').forEach(s => {
-      s.innerHTML = playIcon();
-    });
-    audio.play();
-    btn.innerHTML = pauseIcon();
-  } else {
-    audio.pause();
-    btn.innerHTML = playIcon();
-  }
-}
-
-function playIcon()  { return '<path d="M8 5v14l11-7z"/>'; }
-function pauseIcon() { return '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; }
-
-function initPlayer(id, src) {
-  if (players[id]) return;
-  const audio = new Audio(src);
-  players[id] = audio;
-
-  audio.addEventListener('timeupdate', () => {
-    const pct = (audio.currentTime / audio.duration) * 100 || 0;
-    const bar  = document.getElementById(`bar-${id}`);
-    const time = document.getElementById(`time-${id}`);
-    if (bar)  bar.style.width  = pct + '%';
-    if (time) time.textContent = fmt(audio.currentTime) + ' / ' + fmt(audio.duration);
-  });
-
-  audio.addEventListener('ended', () => {
-    const btn = document.querySelector(`#play-${id} svg`);
-    if (btn) btn.innerHTML = playIcon();
-    const bar = document.getElementById(`bar-${id}`);
-    if (bar) bar.style.width = '0%';
-  });
-}
-
-function seekAudio(e, id) {
-  const audio = players[id];
-  if (!audio || !audio.duration) return;
-  const rect = e.currentTarget.getBoundingClientRect();
-  const pct  = (e.clientX - rect.left) / rect.width;
-  audio.currentTime = pct * audio.duration;
-}
-
-function fmt(s) {
-  if (isNaN(s)) return '0:00';
-  const m = Math.floor(s/60);
-  const sec = Math.floor(s%60).toString().padStart(2,'0');
-  return `${m}:${sec}`;
-}
-
-// ─── Render ──────────────────────────────────────
-function renderCards() {
-  const query = document.getElementById('searchInput').value.toLowerCase();
-  let filtered = lessons.filter(l => {
-    const matchTag   = activeFilter === 'all' || l.tag === activeFilter;
-    const matchQuery = l.title.toLowerCase().includes(query) ||
-                       l.notes.toLowerCase().includes(query) ||
-                       l.tag.toLowerCase().includes(query);
-    return matchTag && matchQuery;
-  });
-
-  document.getElementById('count').textContent = filtered.length;
-  const grid = document.getElementById('grid');
-
-  if (!filtered.length) {
-    grid.innerHTML = `
-      <div class="empty">
-        <div class="empty-icon">📭</div>
-        <h3>${lessons.length ? 'Aramanla eşleşen ders bulunamadı' : 'Henüz ders eklenmedi'}</h3>
-        <p style="margin-top:8px;font-size:.85rem">${lessons.length ? '' : 'Sağ üstteki "+ Yeni Ders Ekle" butonuna tıkla'}</p>
-      </div>`;
+async function loadDrive(){
+  if(API_KEY==='BURAYA_API_KEY_YAZ'||FOLDER_ID==='BURAYA_KLASOR_ID_YAZ'){
+    $('configBanner').classList.remove('hidden');
+    setStatus('⚠️ Kurulum gerekli',false);
+    $('main').innerHTML=stateBox('⚙️','API Key & Klasör ID girilmemiş','Sarı kutudaki adımları takip et.');
     return;
   }
+  $('configBanner').classList.add('hidden');
+  $('refreshBtn').disabled=true;
+  setStatus('⏳ Yükleniyor…');
+  $('main').innerHTML=`<div class="state-box"><div class="spinner"></div><h3>Drive'dan çekiliyor…</h3><p>Klasörler taranıyor.</p></div>`;
+  $('stats').innerHTML='';
 
-  grid.innerHTML = filtered.map(l => {
-    const hasAudio = !!audioBlobs[l.id];
-    const files    = fileBlobs[l.id] || [];
-    const shortNote = l.notes.length > 120 ? l.notes.slice(0,120) + '…' : l.notes;
+  try{
+    const top=await listFolder(FOLDER_ID);
+    const folders=top.filter(f=>f.mimeType==='application/vnd.google-apps.folder');
+    const rootFiles=top.filter(f=>f.mimeType!=='application/vnd.google-apps.folder');
 
-    const audioHTML = hasAudio ? `
-      <div class="audio-section">
-        <div class="audio-label">🎙 Ses Kaydı</div>
-        <div class="custom-audio">
-          <button class="play-btn" id="play-${l.id}" onclick="togglePlay('${l.id}')">
-            <svg viewBox="0 0 24 24" width="14" height="14">${playIcon()}</svg>
-          </button>
-          <div class="audio-info">
-            <div class="audio-name">ses_kaydi.mp3</div>
-            <div class="progress-wrap" onclick="seekAudio(event,'${l.id}')">
-              <div class="progress-bar" id="bar-${l.id}"></div>
-            </div>
-          </div>
-          <div class="audio-time" id="time-${l.id}">0:00</div>
+    allLessons=[];
+    for(const folder of folders){
+      const items=await listFolder(folder.id);
+      const files=items
+        .filter(f=>f.mimeType!=='application/vnd.google-apps.folder')
+        .map(f=>({id:f.id,name:f.name,type:fileType(f.mimeType,f.name),mime:f.mimeType,size:f.size||0}));
+      if(files.length) allLessons.push({name:folder.name,files});
+    }
+    if(rootFiles.length){
+      allLessons.push({
+        name:'Genel',
+        files:rootFiles.map(f=>({id:f.id,name:f.name,type:fileType(f.mimeType,f.name),mime:f.mimeType,size:f.size||0}))
+      });
+    }
+    allLessons.sort((a,b)=>a.name.localeCompare(b.name,'tr'));
+
+    if(!allLessons.length){
+      $('main').innerHTML=stateBox('📭','Klasörde içerik yok','Drive\'a alt klasörler ve dosyalar ekle.');
+      setStatus('✓ Bağlandı',true);
+      return;
+    }
+    setStatus(`✓ ${allLessons.length} ders yüklendi`,true);
+    render();
+  }catch(e){
+    console.error(e);
+    setStatus('✕ Hata',false);
+    $('main').innerHTML=stateBox('⚠️','Yüklenemedi',e.message+'<br><br>API Key ve Klasör ID\'ni kontrol et. Klasörün herkese açık paylaşıldığından emin ol.');
+    showToast('Hata: '+e.message);
+  }finally{
+    $('refreshBtn').disabled=false;
+  }
+}
+
+function stateBox(icon,title,desc){
+  return `<div class="state-box"><div class="icon">${icon}</div><h3>${title}</h3><p>${desc}</p></div>`;
+}
+
+// ── Filter ─────────────────────────────
+function setType(btn,type){
+  document.querySelectorAll('.filt').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activeType=type;
+  render();
+}
+
+// ── Render ─────────────────────────────
+function render(){
+  const q=$('searchInput').value.toLowerCase().trim();
+  let totalFiles=0,totalAudio=0,totalPdf=0,totalPptx=0;
+  let html='';
+
+  for(const lesson of allLessons){
+    let files=[...lesson.files];
+    if(activeType!=='all') files=files.filter(f=>f.type===activeType);
+    if(q) files=files.filter(f=>f.name.toLowerCase().includes(q)||lesson.name.toLowerCase().includes(q));
+    if(!files.length) continue;
+
+    totalFiles+=files.length;
+    files.forEach(f=>{
+      if(f.type==='audio') totalAudio++;
+      if(f.type==='pdf')   totalPdf++;
+      if(f.type==='pptx')  totalPptx++;
+    });
+
+    html+=`
+      <div class="lesson-section">
+        <div class="lesson-header">
+          <span class="lesson-name">${lesson.name}</span>
+          <span class="lesson-count">${files.length} dosya</span>
         </div>
-      </div>` : '';
-
-    const filesHTML = files.length ? `
-      <div class="files-section">
-        <div class="audio-label">📎 Dosyalar</div>
-        ${files.map(f => `<a class="file-chip" href="${f.url}" download="${f.name}" title="${f.name}">📄 ${f.name.length > 20 ? f.name.slice(0,20)+'…' : f.name}</a>`).join('')}
-      </div>` : '';
-
-    const notesHTML = l.notes ? `
-      <div class="notes-section">
-        <div class="notes-label">📝 Notlar</div>
-        <div class="notes-content" id="notes-${l.id}">${shortNote}</div>
-        ${l.notes.length > 120 ? `<span class="read-more" onclick="expandNotes('${l.id}','${encodeURIComponent(l.notes)}')">Devamını gör</span>` : ''}
-      </div>` : '';
-
-    const linksHTML = (l.links && l.links.length) ? `
-      <div class="files-section" style="margin-top:12px">
-        <div class="audio-label">🔗 Kalıcı Linkler</div>
-        ${l.links.map(lk => `<a class="link-chip" href="${lk.url}" target="_blank" rel="noopener">${linkIcon(lk.url)} ${lk.label}</a>`).join('')}
-      </div>` : '';
-
-    return `
-      <div class="card" id="card-${l.id}">
-        <div class="card-header">
-          <div>
-            <div class="card-title">${l.title}</div>
-            <div class="card-date">${l.date}</div>
-          </div>
-          <span class="card-tag">${l.tag}</span>
-        </div>
-        <div class="card-body">
-          ${audioHTML}
-          ${notesHTML}
-          ${filesHTML}
-          ${linksHTML}
-        </div>
-        <div class="card-footer">
-          <button class="icon-btn" onclick="openModal('${l.id}')">✏️ Düzenle</button>
-          <button class="icon-btn del" onclick="deleteLesson('${l.id}')">🗑 Sil</button>
+        <div class="file-grid">
+          ${files.map((f,i)=>cardHTML(f,i*35)).join('')}
         </div>
       </div>`;
-  }).join('');
+  }
 
-  // init audio players
-  filtered.forEach(l => {
-    if (audioBlobs[l.id]) initPlayer(l.id, audioBlobs[l.id]);
+  if(!html) html=stateBox('🔍','Sonuç bulunamadı','Farklı bir arama dene veya filtreyi kaldır.');
+
+  $('main').innerHTML=html;
+  $('stats').innerHTML=`
+    <div class="stat">📚 <strong>${allLessons.length}</strong> ders</div>
+    <div class="stat">📦 <strong>${totalFiles}</strong> dosya</div>
+    ${totalAudio?`<div class="stat">🎙 <strong>${totalAudio}</strong> ses kaydı</div>`:''}
+    ${totalPdf  ?`<div class="stat">📄 <strong>${totalPdf}</strong> PDF</div>`:''}
+    ${totalPptx ?`<div class="stat">📊 <strong>${totalPptx}</strong> slayt</div>`:''}
+  `;
+
+  // Init audio elements
+  document.querySelectorAll('.file-card.audio').forEach(card=>{
+    const id=card.dataset.id;
+    if(audioEls[id]) return;
+    const a=new Audio(`https://drive.google.com/uc?export=download&id=${id}`);
+    audioEls[id]=a;
+    a.addEventListener('timeupdate',()=>{
+      const bar=document.getElementById('bar-'+id);
+      const tim=document.getElementById('tim-'+id);
+      if(bar) bar.style.width=(a.currentTime/a.duration*100||0)+'%';
+      if(tim) tim.textContent=fmt(a.currentTime)+' / '+fmt(a.duration);
+    });
+    a.addEventListener('ended',()=>{
+      const s=document.querySelector(`#pbtn-${id} svg`);
+      if(s) s.innerHTML=playIcon();
+      const bar=document.getElementById('bar-'+id);
+      if(bar) bar.style.width='0%';
+    });
   });
 }
 
-function expandNotes(id, encoded) {
-  const el = document.getElementById(`notes-${id}`);
-  if (!el) return;
-  el.textContent = decodeURIComponent(encoded);
-  el.nextElementSibling?.remove();
+function cardHTML(f,delay){
+  const isAudio=f.type==='audio';
+  const clickAttr=isAudio?'' :`onclick="openFile('${f.id}','${encodeURIComponent(f.name)}','${f.type}')"`;
+  const playerHTML=isAudio?`
+    <div class="audio-player">
+      <div class="player-controls">
+        <button class="play-btn" id="pbtn-${f.id}" onclick="togglePlay(event,'${f.id}')">
+          <svg viewBox="0 0 24 24" width="12" height="12">${playIcon()}</svg>
+        </button>
+        <div class="progress-wrap" onclick="seekAudio(event,'${f.id}')">
+          <div class="progress-bar" id="bar-${f.id}"></div>
+        </div>
+        <span class="audio-time" id="tim-${f.id}">0:00</span>
+      </div>
+    </div>`:'' ;
+
+  return `
+    <div class="file-card ${f.type}" data-id="${f.id}" ${clickAttr} style="animation-delay:${delay}ms">
+      <div class="file-thumb ${f.type}">
+        ${typeEmoji(f.type)}
+        <span class="type-badge">${typeLabel(f.type)}</span>
+      </div>
+      <div class="file-info">
+        <div class="file-name">${f.name}</div>
+        <div class="file-meta">
+          <span>${fmtSize(parseInt(f.size))}</span>
+          ${!isAudio?'<span class="open-hint">↗ Önizle</span>':''}
+        </div>
+      </div>
+      ${playerHTML}
+    </div>`;
 }
 
-// ─── Boot ─────────────────────────────────────────
-renderCards();
+// ── Audio Controls ──────────────────────
+function togglePlay(e,id){
+  e.stopPropagation();
+  const a=audioEls[id]; if(!a) return;
+  if(a.paused){
+    Object.values(audioEls).forEach(x=>x.pause());
+    document.querySelectorAll('.play-btn svg').forEach(s=>s.innerHTML=playIcon());
+    a.play();
+    document.querySelector(`#pbtn-${id} svg`).innerHTML=pauseIcon();
+  }else{
+    a.pause();
+    document.querySelector(`#pbtn-${id} svg`).innerHTML=playIcon();
+  }
+}
+function seekAudio(e,id){
+  e.stopPropagation();
+  const a=audioEls[id]; if(!a||!a.duration) return;
+  const r=e.currentTarget.getBoundingClientRect();
+  a.currentTime=((e.clientX-r.left)/r.width)*a.duration;
+}
+
+// ── Preview Modal ───────────────────────
+function openFile(id,encodedName,type){
+  const name=decodeURIComponent(encodedName);
+  $('modalTitle').textContent=name;
+  currentDriveUrl=`https://drive.google.com/file/d/${id}/view`;
+  let src='';
+  if(type==='pdf')  src=`https://drive.google.com/file/d/${id}/preview`;
+  else if(type==='pptx') src=`https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false`;
+  else src=`https://drive.google.com/file/d/${id}/preview`;
+  $('modalFrame').src=src;
+  $('overlay').classList.add('open');
+}
+function openInDrive(){ window.open(currentDriveUrl,'_blank'); }
+function closeModal(){ $('overlay').classList.remove('open'); $('modalFrame').src='about:blank'; }
+function closeOnBg(e){ if(e.target===$('overlay')) closeModal(); }
+
+// ── Boot ────────────────────────────────
+loadDrive();
 </script>
 </body>
 </html>
