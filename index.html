@@ -678,11 +678,11 @@ nav {
   </div>
 
   <div class="nb-speed" id="nbSpeed">
-    <button class="nb-speed-btn" onclick="nbSetSpeed(0.75)">0.75×</button>
-    <button class="nb-speed-btn active" onclick="nbSetSpeed(1)">1×</button>
-    <button class="nb-speed-btn" onclick="nbSetSpeed(1.25)">1.25×</button>
-    <button class="nb-speed-btn" onclick="nbSetSpeed(1.5)">1.5×</button>
-    <button class="nb-speed-btn" onclick="nbSetSpeed(2)">2×</button>
+    <button class="nb-speed-btn" data-rate="0.75" onclick="nbSetSpeed(0.75)">0.75×</button>
+    <button class="nb-speed-btn active" data-rate="1" onclick="nbSetSpeed(1)">1×</button>
+    <button class="nb-speed-btn" data-rate="1.25" onclick="nbSetSpeed(1.25)">1.25×</button>
+    <button class="nb-speed-btn" data-rate="1.5" onclick="nbSetSpeed(1.5)">1.5×</button>
+    <button class="nb-speed-btn" data-rate="2" onclick="nbSetSpeed(2)">2×</button>
   </div>
 
   <button class="nb-close" onclick="nbStop()" title="Kapat">✕</button>
@@ -1055,7 +1055,7 @@ function playAudio(id, name, lesson) {
   audio.volume = parseFloat($('nbVolSlider').value) || 1;
   // preserve current speed
   const activeSpeedBtn = document.querySelector('.nb-speed-btn.active');
-  if (activeSpeedBtn) audio.playbackRate = parseFloat(activeSpeedBtn.textContent) || 1;
+  if (activeSpeedBtn) audio.playbackRate = parseFloat(activeSpeedBtn.dataset.rate) || 1;
 
   playingId     = id;
   playingLesson = lesson;
@@ -1151,7 +1151,7 @@ function nbSetVolume(v) {
 function nbSetSpeed(rate) {
   if (audio) audio.playbackRate = rate;
   document.querySelectorAll('.nb-speed-btn').forEach(b => {
-    b.classList.toggle('active', parseFloat(b.textContent) === rate);
+    b.classList.toggle('active', parseFloat(b.dataset.rate) === rate);
   });
 }
 
