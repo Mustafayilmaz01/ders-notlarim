@@ -2,51 +2,87 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Ders Paneli</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dersflix</title>
 
 <style>
-body { margin:0; font-family:Arial; background:#111; color:white; }
+body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
+.container{display:flex;height:100vh}
 
-.container { display:flex; height:100vh; }
-
-.left {
-    width:30%;
-    background:#1c1c1c;
-    overflow-y:auto;
-    padding:10px;
+/* LEFT PANEL */
+.left{
+  width:28%;
+  background:#181818;
+  overflow:auto;
+  padding:15px;
+  border-right:1px solid #333;
 }
 
-.right {
-    width:70%;
+.logo{
+  font-size:22px;
+  font-weight:bold;
+  color:#e50914;
+  margin-bottom:15px;
 }
 
-iframe {
-    width:100%;
-    height:100%;
-    border:none;
+.item{
+  padding:12px;
+  margin:6px 0;
+  background:#222;
+  border-radius:6px;
+  cursor:pointer;
+  transition:0.2s;
+}
+.item:hover{background:#333;transform:scale(1.02)}
+
+.section{
+  margin-top:20px;
+  color:#e50914;
+  font-weight:bold;
 }
 
-.item {
-    padding:10px;
-    margin:5px 0;
-    background:#2c2c2c;
-    cursor:pointer;
-    border-radius:5px;
+/* RIGHT PANEL */
+.right{
+  width:72%;
+}
+iframe{
+  width:100%;
+  height:100%;
+  border:none;
 }
 
-.item:hover { background:#444; }
-
-.section-title {
-    margin-top:15px;
-    font-weight:bold;
-    color:#e50914;
+/* PLAYER BAR */
+.player{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:#181818;
+  padding:10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border-top:1px solid #333;
 }
 
-audio {
-    width:100%;
-    position:fixed;
-    bottom:0;
-    left:0;
+.player button{
+  background:#e50914;
+  border:none;
+  padding:8px 12px;
+  color:#fff;
+  cursor:pointer;
+  border-radius:5px;
+}
+
+.player button:hover{background:#ff2a2a}
+
+.info{
+  flex:1;
+  font-size:14px;
+}
+
+audio{
+  width:40%;
 }
 </style>
 </head>
@@ -55,80 +91,130 @@ audio {
 
 <div class="container">
 
-    <!-- SOL PANEL -->
-    <div class="left" id="list">
-        Yükleniyor...
-    </div>
+  <div class="left" id="list">
+    <div class="logo">🎬 Dersflix</div>
+    Yükleniyor...
+  </div>
 
-    <!-- SAĞ PANEL -->
-    <div class="right">
-        <iframe id="viewer"></iframe>
-    </div>
+  <div class="right">
+    <iframe id="viewer"></iframe>
+  </div>
 
 </div>
 
-<audio id="audio" controls></audio>
+<div class="player">
+  <button onclick="prev()">⏮</button>
+  <button onclick="next()">⏭</button>
+
+  <div class="info">
+    <div id="title">Bir şey seç</div>
+  </div>
+
+  <audio id="audio" controls></audio>
+</div>
 
 <script>
 
-let files = [];
+const API_KEY = "AIzaSyDBWNz1aWUyBDy7VfZy7ca7Y9MdtjXVdf8";
+const FOLDER_ID = "1c9xW5CggYFkTxXD5ZHYgvAiXJNhfqy_m";
 
-fetch("files.json")
-.then(res => res.json())
-.then(data => {
+let audioList = [];
+let currentIndex = 0;
 
-    files = data.files;
+async function loadFiles(){
 
-    let audioList = [];
-    let docList = [];
+  const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name,mimeType)&key=${API_KEY}`;
 
-    files.forEach(f => {
-        if(f.name.endsWith(".mp3") || f.name.endsWith(".wav"))
-            audioList.push(f);
+  const res = await fetch(url);
+  const data = await res.json();
 
-        if(f.name.endsWith(".pdf") || f.name.endsWith(".pptx"))
-            docList.push(f);
-    });
+  console.log(data); // DEBUG
 
-    render(audioList, docList);
+  if(!data.files){
+    document.getElementById("list").innerHTML="❌ API çalışmadı";
+    return;
+  }
 
+  let audios = [];
+  let docs = [];
+
+  data.files.forEach(f=>{
+    if(f.mimeType.includes("audio")) audios.push(f);
+    if(f.mimeType==="application/pdf" || f.name.endsWith(".pptx")) docs.push(f);
+  });
+
+  if(audios.length === 0 && docs.length === 0){
+    document.getElementById("list").innerHTML="❌ Dosya bulunamadı";
+    return;
+  }
+
+  audioList = audios;
+  render(audios,docs);
+}
+
+function render(audios,docs){
+
+  const list=document.getElementById("list");
+  list.innerHTML="<div class='logo'>🎬 Dersflix</div>";
+
+  list.innerHTML+="<div class='section'>🎧 Sesler</div>";
+
+  audios.forEach((a,index)=>{
+    const div=document.createElement("div");
+    div.className="item";
+    div.innerText=a.name;
+
+    div.onclick=()=>{
+      playAudio(index);
+    };
+
+    list.appendChild(div);
+  });
+
+  list.innerHTML+="<div class='section'>📄 PDF / PPTX</div>";
+
+  docs.forEach(d=>{
+    const div=document.createElement("div");
+    div.className="item";
+    div.innerText=d.name;
+
+    div.onclick=()=>{
+      document.getElementById("viewer").src =
+        `https://drive.google.com/file/d/${d.id}/preview`;
+    };
+
+    list.appendChild(div);
+  });
+}
+
+function playAudio(index){
+  currentIndex = index;
+  const file = audioList[index];
+
+  const audio = document.getElementById("audio");
+  audio.src = `https://docs.google.com/uc?export=open&id=${file.id}`;
+  audio.play();
+
+  document.getElementById("title").innerText = file.name;
+}
+
+function next(){
+  if(currentIndex < audioList.length-1){
+    playAudio(currentIndex+1);
+  }
+}
+
+function prev(){
+  if(currentIndex > 0){
+    playAudio(currentIndex-1);
+  }
+}
+
+document.getElementById("audio").addEventListener("ended",()=>{
+  next();
 });
 
-function render(audioList, docList){
-
-    const list = document.getElementById("list");
-    list.innerHTML = "";
-
-    list.innerHTML += "<div class='section-title'>🎧 Sesler</div>";
-
-    audioList.forEach(a=>{
-        const div = document.createElement("div");
-        div.className="item";
-        div.innerText = a.name;
-
-        div.onclick = ()=>{
-            document.getElementById("audio").src =
-                `https://docs.google.com/uc?export=open&id=${a.id}`;
-        };
-
-        list.appendChild(div);
-    });
-
-    list.innerHTML += "<div class='section-title'>📄 PDF / PPTX</div>";
-
-    docList.forEach(d=>{
-        const div = document.createElement("div");
-        div.className="item";
-        div.innerText = d.name;
-
-        div.onclick = ()=>{
-            document.getElementById("viewer").src =
-                `https://drive.google.com/file/d/${d.id}/preview`;
-        };
-
-        list.appendChild(div);
-    });
-}
+loadFiles();
 
 </script>
 
