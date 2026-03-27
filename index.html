@@ -3,220 +3,669 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dersflix</title>
-
+<title>Ders Arşivim</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
-body{margin:0;font-family:Arial;background:#0f0f0f;color:#fff}
-.container{display:flex;height:100vh}
-
-/* LEFT PANEL */
-.left{
-  width:28%;
-  background:#181818;
-  overflow:auto;
-  padding:15px;
-  border-right:1px solid #333;
+/* ── TOKENS ── */
+:root{
+  --bg:#08080a;--surface:#0f0f12;--card:#141418;--card2:#18181d;
+  --border:#1f1f26;--border2:#2a2a33;
+  --accent:#a78bfa;--accent2:#7c3aed;--accentg:#c4b5fd;
+  --green:#6ee7b7;--green2:#34d399;
+  --red:#f87171;--yellow:#fcd34d;--blue:#7dd3fc;
+  --text:#e8e8f0;--text2:#a0a0b0;--muted:#52525f;
+  --r:12px;--r2:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Instrument Sans',sans-serif;
+  min-height:100vh;
+  padding-bottom:120px; /* global player alanı */
 }
 
+/* ── GRAIN ── */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity:.6;
+}
+
+/* ── HEADER ── */
+header{
+  position:sticky;top:0;z-index:200;
+  background:rgba(8,8,10,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0 28px;height:62px;
+  display:flex;align-items:center;justify-content:space-between;
+}
 .logo{
-  font-size:22px;
-  font-weight:bold;
-  color:#e50914;
-  margin-bottom:15px;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;
+  color:var(--text);display:flex;align-items:center;gap:10px;letter-spacing:-.3px;
+}
+.logo-mark{
+  width:28px;height:28px;border-radius:7px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;box-shadow:0 0 16px rgba(124,58,237,.4);
+}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+.pill{
+  font-size:.7rem;border:1px solid var(--border2);border-radius:20px;
+  padding:4px 12px;color:var(--muted);transition:all .3s;
+}
+.pill.ok {color:var(--green);border-color:rgba(110,231,183,.2);}
+.pill.err{color:var(--red); border-color:rgba(248,113,113,.2);}
+.hdr-btn{
+  background:none;border:1px solid var(--border2);color:var(--text2);
+  padding:7px 14px;border-radius:var(--r2);font-family:'Syne',sans-serif;
+  font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;
+}
+.hdr-btn:hover{border-color:var(--accent);color:var(--accentg);}
+.hdr-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+/* ── CONTAINER ── */
+.wrap{max-width:1160px;margin:0 auto;padding:28px 20px;position:relative;z-index:1;}
+
+/* ── CONFIG BANNER ── */
+.cfg{
+  background:rgba(252,211,77,.04);border:1px solid rgba(252,211,77,.12);
+  border-radius:var(--r);padding:20px 24px;margin-bottom:28px;
+  display:flex;gap:14px;align-items:flex-start;
+}
+.cfg.hidden{display:none;}
+.cfg-ico{font-size:1.4rem;flex-shrink:0;}
+.cfg h3{font-family:'Syne',sans-serif;color:var(--yellow);font-size:.9rem;margin-bottom:8px;}
+.cfg p{font-size:.8rem;color:var(--text2);line-height:1.7;}
+.cfg code{background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:4px;padding:1px 7px;font-size:.78rem;color:var(--yellow);}
+
+/* ── SEARCH + FILTERS ── */
+.toolbar{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;align-items:center;}
+.srch{
+  flex:1;min-width:200px;position:relative;
+}
+.srch input{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r2);padding:9px 14px 9px 36px;
+  color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:.85rem;
+  outline:none;transition:border-color .2s;
+}
+.srch input:focus{border-color:var(--accent);}
+.srch input::placeholder{color:var(--muted);}
+.srch-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;pointer-events:none;}
+.filters{display:flex;gap:5px;flex-wrap:wrap;}
+.f{
+  display:flex;align-items:center;gap:5px;
+  background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  padding:7px 13px;border-radius:var(--r2);cursor:pointer;
+  font-size:.76rem;font-family:'Instrument Sans',sans-serif;
+  transition:all .2s;white-space:nowrap;
+}
+.f.on{border-color:var(--accent);color:var(--accentg);background:rgba(167,139,250,.07);}
+.fdot{width:5px;height:5px;border-radius:50%;}
+
+/* ── STATS ROW ── */
+.stats{display:flex;gap:6px;margin-bottom:28px;flex-wrap:wrap;}
+.stat{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r2);padding:7px 14px;
+  font-size:.73rem;color:var(--muted);display:flex;align-items:center;gap:5px;
+}
+.stat b{color:var(--text);font-weight:500;}
+
+/* ── LESSON SECTION ── */
+.ls{margin-bottom:40px;}
+.ls-hdr{
+  display:flex;align-items:center;gap:10px;
+  padding-bottom:12px;margin-bottom:14px;
+  border-bottom:1px solid var(--border);
+}
+.ls-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--text);}
+.ls-ct{
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:20px;padding:2px 9px;font-size:.68rem;color:var(--muted);
 }
 
-.item{
-  padding:12px;
-  margin:6px 0;
-  background:#222;
-  border-radius:6px;
-  cursor:pointer;
-  transition:0.2s;
-}
-.item:hover{background:#333;transform:scale(1.02)}
+/* ── FILE GRID ── */
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;}
 
-.section{
-  margin-top:20px;
-  color:#e50914;
-  font-weight:bold;
+/* ── FILE CARD ── */
+.fc{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;
+  transition:transform .22s,box-shadow .22s,border-color .22s;
+  animation:up .3s ease both;position:relative;
+}
+@keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fc:not(.audio){cursor:pointer;}
+.fc:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(0,0,0,.55);}
+.fc.audio:hover{border-color:rgba(110,231,183,.25);}
+.fc.pdf:hover  {border-color:rgba(248,113,113,.25);}
+.fc.pptx:hover {border-color:rgba(252,211,77,.25);}
+.fc.other:hover{border-color:rgba(125,211,252,.25);}
+
+/* playing glow */
+.fc.audio.playing{
+  border-color:rgba(110,231,183,.5);
+  box-shadow:0 0 0 1px rgba(110,231,183,.2),0 8px 24px rgba(0,0,0,.4);
+}
+.fc.audio.playing .ft{background:rgba(110,231,183,.12);}
+
+.ft{
+  height:82px;display:flex;align-items:center;justify-content:center;
+  font-size:2rem;position:relative;transition:background .3s;
+}
+.ft.audio{background:rgba(110,231,183,.06);}
+.ft.pdf  {background:rgba(248,113,113,.06);}
+.ft.pptx {background:rgba(252,211,77,.06);}
+.ft.other{background:rgba(125,211,252,.06);}
+
+.tbadge{
+  position:absolute;top:7px;right:7px;
+  font-size:.58rem;font-weight:700;letter-spacing:.6px;
+  padding:2px 7px;border-radius:4px;
+  font-family:'Syne',sans-serif;text-transform:uppercase;
+}
+.audio .tbadge{background:rgba(110,231,183,.12);color:var(--green);}
+.pdf   .tbadge{background:rgba(248,113,113,.12);color:var(--red);}
+.pptx  .tbadge{background:rgba(252,211,77,.12); color:var(--yellow);}
+.other .tbadge{background:rgba(125,211,252,.12);color:var(--blue);}
+
+/* playing wave icon */
+.wave{
+  position:absolute;bottom:7px;left:8px;
+  display:none;align-items:flex-end;gap:2px;height:14px;
+}
+.fc.playing .wave{display:flex;}
+.wave span{
+  display:block;width:3px;background:var(--green);border-radius:2px;
+  animation:wave-bar 1s ease-in-out infinite;
+}
+.wave span:nth-child(1){animation-delay:0s;height:6px;}
+.wave span:nth-child(2){animation-delay:.15s;height:12px;}
+.wave span:nth-child(3){animation-delay:.3s;height:8px;}
+.wave span:nth-child(4){animation-delay:.45s;height:10px;}
+@keyframes wave-bar{
+  0%,100%{transform:scaleY(.4)}
+  50%{transform:scaleY(1)}
 }
 
-/* RIGHT PANEL */
-.right{
-  width:72%;
+.fi{padding:10px 12px 11px;}
+.fn{
+  font-size:.78rem;color:var(--text);line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden;margin-bottom:7px;
 }
-iframe{
-  width:100%;
-  height:100%;
-  border:none;
+.fm{
+  font-size:.68rem;color:var(--muted);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.open-h{color:var(--accentg);font-size:.68rem;}
+
+/* ── MINI AUDIO PLAYER (on card) ── */
+.ap{
+  padding:9px 11px;border-top:1px solid var(--border);
+  background:rgba(110,231,183,.02);
+}
+.apc{display:flex;align-items:center;gap:7px;}
+.pbtn{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--green);border:none;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.pbtn:hover{background:var(--green2);transform:scale(1.05);}
+.pbtn svg{fill:#08080a;}
+.pw{flex:1;height:3px;background:var(--border2);border-radius:2px;cursor:pointer;position:relative;}
+.pb{height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .08s linear;}
+.at{font-size:.64rem;color:var(--muted);flex-shrink:0;font-variant-numeric:tabular-nums;}
+
+/* ── GLOBAL NOW PLAYING BAR ── */
+#nowBar{
+  position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:rgba(10,10,13,.96);backdrop-filter:blur(24px);
+  border-top:1px solid var(--border2);
+  padding:0 24px;height:76px;
+  display:none;align-items:center;gap:20px;
+  animation:slideUp .3s ease;
+}
+#nowBar.visible{display:flex;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+.nb-thumb{
+  width:42px;height:42px;border-radius:8px;
+  background:rgba(110,231,183,.1);
+  border:1px solid rgba(110,231,183,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;flex-shrink:0;
+  animation:pulse-nb 2s infinite;
+}
+@keyframes pulse-nb{0%,100%{box-shadow:0 0 0 0 rgba(110,231,183,.25)}50%{box-shadow:0 0 0 6px rgba(110,231,183,0)}}
+
+.nb-info{flex:1;min-width:0;}
+.nb-label{font-size:.62rem;color:var(--green);font-family:'Syne',sans-serif;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:2px;}
+.nb-name{font-size:.88rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nb-lesson{font-size:.72rem;color:var(--muted);}
+
+.nb-controls{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.nb-pbtn{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--green);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.nb-pbtn:hover{background:var(--green2);transform:scale(1.05);}
+.nb-pbtn svg{fill:#08080a;}
+
+.nb-progress{
+  flex:1;max-width:340px;
+  display:flex;align-items:center;gap:10px;
+  flex-shrink:0;
+}
+.nb-pw{flex:1;height:4px;background:var(--border2);border-radius:2px;cursor:pointer;}
+.nb-pb{height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .08s linear;}
+.nb-time{font-size:.7rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;}
+
+.nb-vol{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.nb-vol-ico{font-size:.85rem;color:var(--muted);cursor:pointer;}
+.nb-vol input[type=range]{
+  -webkit-appearance:none;width:70px;height:3px;
+  border-radius:2px;background:var(--border2);outline:none;cursor:pointer;
+}
+.nb-vol input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:12px;height:12px;
+  border-radius:50%;background:var(--green);cursor:pointer;
 }
 
-/* PLAYER BAR */
-.player{
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  background:#181818;
-  padding:10px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  border-top:1px solid #333;
+.nb-close{
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:1rem;padding:4px;transition:color .2s;flex-shrink:0;
 }
+.nb-close:hover{color:var(--red);}
 
-.player button{
-  background:#e50914;
-  border:none;
-  padding:8px 12px;
-  color:#fff;
-  cursor:pointer;
-  border-radius:5px;
+/* ── STATE BOXES ── */
+.sbox{text-align:center;padding:70px 20px;}
+.sbox .ico{font-size:2.8rem;margin-bottom:14px;}
+.sbox h3{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--text);margin-bottom:7px;}
+.sbox p{font-size:.82rem;color:var(--muted);line-height:1.6;}
+.spin{
+  width:32px;height:32px;border:2.5px solid var(--border2);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin 1s linear infinite;margin:0 auto 14px;
 }
+@keyframes spin{to{transform:rotate(360deg)}}
 
-.player button:hover{background:#ff2a2a}
-
-.info{
-  flex:1;
-  font-size:14px;
+/* ── PDF MODAL ── */
+.ov{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.85);z-index:250;
+  align-items:center;justify-content:center;padding:16px;
 }
+.ov.open{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:16px;width:100%;max-width:880px;height:90vh;
+  display:flex;flex-direction:column;overflow:hidden;
+  animation:modalIn .25s ease;
+}
+.modal.audio-modal{max-width:520px;height:220px;}
+@keyframes modalIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+.mhdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 18px;border-bottom:1px solid var(--border);flex-shrink:0;
+  gap:12px;
+}
+.mhdr-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.mhdr-ico{
+  width:30px;height:30px;border-radius:7px;flex-shrink:0;
+  background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;
+}
+.mhdr h3{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mhdr-btns{display:flex;gap:7px;flex-shrink:0;}
+.mbtn{
+  background:none;border:1px solid var(--border2);color:var(--text2);
+  border-radius:var(--r2);padding:6px 12px;font-size:.75rem;cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;transition:all .2s;
+}
+.mbtn.danger:hover{color:var(--red);border-color:var(--red);}
+.mbtn.go:hover{color:var(--accentg);border-color:var(--accent);}
+.mbody{flex:1;overflow:hidden;}
+.mbody iframe{width:100%;height:100%;border:none;}
 
-audio{
-  width:40%;
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  header{padding:0 14px;}
+  .wrap{padding:16px 12px;}
+  .nb-vol,.nb-progress{display:none;}
+  #nowBar{gap:12px;}
 }
 </style>
 </head>
-
 <body>
 
-<div class="container">
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">📚</div>
+    Ders Arşivim
+  </div>
+  <div class="hdr-right">
+    <span class="pill" id="statusPill">⏳ Yükleniyor</span>
+    <button class="hdr-btn" id="refreshBtn" onclick="loadDrive()" disabled>↻ Yenile</button>
+  </div>
+</header>
 
-  <div class="left" id="list">
-    <div class="logo">🎬 Dersflix</div>
-    Yükleniyor...
+<div class="wrap">
+
+  <!-- CONFIG BANNER -->
+  <div class="cfg" id="cfgBanner">
+    <div class="cfg-ico">⚙️</div>
+    <div>
+      <h3>Kurulum — 2 satırı doldur ve kaydet</h3>
+      <p>
+        Dosyanın en altında şu iki satırı bul:<br><br>
+        <code>const API_KEY = 'BURAYA_API_KEY_YAZ';</code><br>
+        <code>const FOLDER_ID = 'BURAYA_KLASOR_ID_YAZ';</code><br><br>
+        <strong>Klasör ID:</strong> drive.google.com/drive/folders/<strong style="color:var(--yellow)">BURASI</strong><br>
+        Klasörü <strong>"Bağlantıya sahip herkes → Görüntüleyici"</strong> olarak paylaş.
+      </p>
+    </div>
   </div>
 
-  <div class="right">
-    <iframe id="viewer"></iframe>
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="srch">
+      <span class="srch-ico">🔍</span>
+      <input id="srchInput" placeholder="Dosya veya ders ara…" oninput="render()">
+    </div>
+    <div class="filters">
+      <button class="f on"  onclick="setF(this,'all')">  <span class="fdot" style="background:#52525f"></span>Tümü</button>
+      <button class="f"     onclick="setF(this,'audio')"><span class="fdot" style="background:var(--green)"></span>Ses</button>
+      <button class="f"     onclick="setF(this,'pdf')">  <span class="fdot" style="background:var(--red)"></span>PDF</button>
+      <button class="f"     onclick="setF(this,'pptx')"> <span class="fdot" style="background:var(--yellow)"></span>Slayt</button>
+      <button class="f"     onclick="setF(this,'other')"><span class="fdot" style="background:var(--blue)"></span>Diğer</button>
+    </div>
   </div>
 
+  <div class="stats" id="stats"></div>
+  <div id="main"></div>
 </div>
 
-<div class="player">
-  <button onclick="prev()">⏮</button>
-  <button onclick="next()">⏭</button>
-
-  <div class="info">
-    <div id="title">Bir şey seç</div>
+<!-- GLOBAL NOW PLAYING BAR -->
+<div id="nowBar">
+  <div class="nb-thumb" id="nbThumb">🎙</div>
+  <div class="nb-info">
+    <div class="nb-label">▶ Şu an çalıyor</div>
+    <div class="nb-name"  id="nbName">—</div>
+    <div class="nb-lesson" id="nbLesson">—</div>
   </div>
+  <div class="nb-controls">
+    <button class="nb-pbtn" id="nbPlayBtn" onclick="nbToggle()">
+      <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+    </button>
+  </div>
+  <div class="nb-progress">
+    <span class="nb-time" id="nbCur">0:00</span>
+    <div class="nb-pw" id="nbPw" onclick="nbSeek(event)">
+      <div class="nb-pb" id="nbPb"></div>
+    </div>
+    <span class="nb-time" id="nbDur">0:00</span>
+  </div>
+  <div class="nb-vol">
+    <span class="nb-vol-ico" onclick="nbMute()">🔊</span>
+    <input type="range" min="0" max="1" step="0.05" value="1" id="nbVol" oninput="nbVolume(this.value)">
+  </div>
+  <button class="nb-close" onclick="nbStop()" title="Kapat">✕</button>
+</div>
 
-  <audio id="audio" controls></audio>
+<!-- PDF MODAL -->
+<div class="ov" id="ov" onclick="ovClose(event)">
+  <div class="modal">
+    <div class="mhdr">
+      <div class="mhdr-left">
+        <div class="mhdr-ico">📄</div>
+        <h3 id="modalTitle">—</h3>
+      </div>
+      <div class="mhdr-btns">
+        <button class="mbtn go"     onclick="openDrive()">↗ Drive'da aç</button>
+        <button class="mbtn danger" onclick="closeModal()">✕ Kapat</button>
+      </div>
+    </div>
+    <div class="mbody"><iframe id="mFrame" src="about:blank" allowfullscreen></iframe></div>
+  </div>
 </div>
 
 <script>
+/* ═══════════════════════════════
+   CONFIG — sadece bu 2 satır
+═══════════════════════════════ */
+const API_KEY   = 'AIzaSyDBWNz1aWUyBDy7VfZy7ca7Y9MdtjXVdf8';
+const FOLDER_ID = '1c9xW5CggYFkTxXD5ZHYgvAiXJNhfqy_m';
 
-const API_KEY = "AIzaSyDBWNz1aWUyBDy7VfZy7ca7Y9MdtjXVdf8";
-const FOLDER_ID = "1c9xW5CggYFkTxXD5ZHYgvAiXJNhfqy_m";
+/* ── State ── */
+let lessons    = [];          // [{name, files:[...]}]
+let activeFilt = 'all';
+let curDriveUrl= '';
 
-let audioList = [];
-let currentIndex = 0;
+// Audio state
+let curAudio   = null;  // HTMLAudioElement
+let curId      = null;  // file id
+let curLesson  = '';
 
-async function loadFiles(){
+/* ── Helpers ── */
+const $  = id => document.getElementById(id);
+const esc = s => s.replace(/'/g,"&#39;").replace(/"/g,'&quot;');
 
-  const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name,mimeType)&key=${API_KEY}`;
+function fileType(mime,name){
+  const ext=name.split('.').pop().toLowerCase();
+  if(['mp3','m4a','wav','ogg','aac','flac','opus','wma','mp4','mkv','avi','mov','webm'].includes(ext)) return 'audio';
+  if(mime.startsWith('audio/')||mime.startsWith('video/')) return 'audio';
+  if(ext==='pdf'||mime==='application/pdf') return 'pdf';
+  if(['pptx','ppt'].includes(ext)||mime.includes('presentation')) return 'pptx';
+  return 'other';
+}
+function tEmoji(t){return{audio:'🎙',pdf:'📄',pptx:'📊',other:'📁'}[t]||'📁';}
+function tLabel(t){return{audio:'SES',pdf:'PDF',pptx:'SLAYT',other:'DOSYA'}[t]||'DOSYA';}
+function fmtSz(b){
+  b=parseInt(b)||0;
+  if(!b) return '';
+  return b<1048576?(b/1024).toFixed(0)+' KB':(b/1048576).toFixed(1)+' MB';
+}
+function fmt(s){
+  if(!isFinite(s)||isNaN(s)) return '0:00';
+  return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+}
+function pi(){return'<path d="M8 5v14l11-7z"/>';}
+function pa(){return'<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';}
 
-  const res = await fetch(url);
-  const data = await res.json();
+function setStatus(msg,ok=null){
+  const p=$('statusPill');p.textContent=msg;
+  p.className='pill'+(ok===true?' ok':ok===false?' err':'');
+}
+function sbox(ico,h,p){
+  return `<div class="sbox"><div class="ico">${ico}</div><h3>${h}</h3><p>${p}</p></div>`;
+}
 
-  console.log(data); // DEBUG
+/* ── Drive API ── */
+async function listFolder(fid){
+  let files=[],token='';
+  do{
+    const url=`https://www.googleapis.com/drive/v3/files`+
+      `?q='${fid}'+in+parents+and+trashed=false`+
+      `&fields=nextPageToken,files(id,name,mimeType,size)`+
+      `&pageSize=200&key=${API_KEY}`+(token?`&pageToken=${token}`:'');
+    const r=await fetch(url);
+    if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'API Hatası');}
+    const d=await r.json();
+    files=[...files,...(d.files||[])];
+    token=d.nextPageToken||'';
+  }while(token);
+  return files;
+}
 
-  if(!data.files){
-    document.getElementById("list").innerHTML="❌ API çalışmadı";
+async function loadDrive(){
+  if(API_KEY==='BURAYA_API_KEY_YAZ'||FOLDER_ID==='BURAYA_KLASOR_ID_YAZ'){
+    $('cfgBanner').classList.remove('hidden');
+    setStatus('⚠️ Kurulum gerekli',false);
+    $('main').innerHTML=sbox('⚙️','Yapılandırma eksik','Sarı kutudaki adımları takip et.');
     return;
   }
+  $('cfgBanner').classList.add('hidden');
+  $('refreshBtn').disabled=true;
+  setStatus('⏳ Yükleniyor…');
+  $('main').innerHTML=`<div class="sbox"><div class="spin"></div><h3>Drive taranıyor…</h3><p>Klasörler ve dosyalar okunuyor.</p></div>`;
+  $('stats').innerHTML='';
 
-  let audios = [];
-  let docs = [];
+  try{
+    const top=await listFolder(FOLDER_ID);
+    const folders=top.filter(f=>f.mimeType==='application/vnd.google-apps.folder');
+    const root   =top.filter(f=>f.mimeType!=='application/vnd.google-apps.folder');
 
-  data.files.forEach(f=>{
-    if(f.mimeType.includes("audio")) audios.push(f);
-    if(f.mimeType==="application/pdf" || f.name.endsWith(".pptx")) docs.push(f);
-  });
+    lessons=[];
+    for(const fo of folders){
+      const items=await listFolder(fo.id);
+      const files=items
+        .filter(f=>f.mimeType!=='application/vnd.google-apps.folder')
+        .map(f=>({id:f.id,name:f.name,type:fileType(f.mimeType,f.name),mime:f.mimeType,size:f.size||0}));
+      if(files.length) lessons.push({name:fo.name,files});
+    }
+    if(root.length) lessons.push({
+      name:'Genel',
+      files:root.map(f=>({id:f.id,name:f.name,type:fileType(f.mimeType,f.name),mime:f.mimeType,size:f.size||0}))
+    });
+    lessons.sort((a,b)=>a.name.localeCompare(b.name,'tr'));
 
-  if(audios.length === 0 && docs.length === 0){
-    document.getElementById("list").innerHTML="❌ Dosya bulunamadı";
-    return;
-  }
-
-  audioList = audios;
-  render(audios,docs);
-}
-
-function render(audios,docs){
-
-  const list=document.getElementById("list");
-  list.innerHTML="<div class='logo'>🎬 Dersflix</div>";
-
-  list.innerHTML+="<div class='section'>🎧 Sesler</div>";
-
-  audios.forEach((a,index)=>{
-    const div=document.createElement("div");
-    div.className="item";
-    div.innerText=a.name;
-
-    div.onclick=()=>{
-      playAudio(index);
-    };
-
-    list.appendChild(div);
-  });
-
-  list.innerHTML+="<div class='section'>📄 PDF / PPTX</div>";
-
-  docs.forEach(d=>{
-    const div=document.createElement("div");
-    div.className="item";
-    div.innerText=d.name;
-
-    div.onclick=()=>{
-      document.getElementById("viewer").src =
-        `https://drive.google.com/file/d/${d.id}/preview`;
-    };
-
-    list.appendChild(div);
-  });
-}
-
-function playAudio(index){
-  currentIndex = index;
-  const file = audioList[index];
-
-  const audio = document.getElementById("audio");
-  audio.src = `https://docs.google.com/uc?export=open&id=${file.id}`;
-  audio.play();
-
-  document.getElementById("title").innerText = file.name;
-}
-
-function next(){
-  if(currentIndex < audioList.length-1){
-    playAudio(currentIndex+1);
+    if(!lessons.length){
+      $('main').innerHTML=sbox('📭','Klasör boş','Drive\'a alt klasörler ve dosyalar ekle, sonra Yenile\'ye bas.');
+      setStatus('✓ Bağlandı',true);return;
+    }
+    setStatus(`✓ ${lessons.length} ders`,true);
+    render();
+  }catch(e){
+    console.error(e);
+    setStatus('✕ Hata',false);
+    $('main').innerHTML=sbox('⚠️','Yüklenemedi',e.message+'<br><br>API Key, Klasör ID ve Drive paylaşım ayarlarını kontrol et.');
+  }finally{
+    $('refreshBtn').disabled=false;
   }
 }
 
-function prev(){
-  if(currentIndex > 0){
-    playAudio(currentIndex-1);
-  }
+/* ── Filter ── */
+function setF(btn,type){
+  document.querySelectorAll('.f').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');activeFilt=type;render();
 }
 
-document.getElementById("audio").addEventListener("ended",()=>{
-  next();
-});
+/* ── Render ── */
+function render(){
+  const q=$('srchInput').value.toLowerCase().trim();
+  let tf=0,ta=0,tp=0,tpp=0,html='';
 
-loadFiles();
+  for(const ls of lessons){
+    let files=[...ls.files];
+    if(activeFilt!=='all') files=files.filter(f=>f.type===activeFilt);
+    if(q) files=files.filter(f=>f.name.toLowerCase().includes(q)||ls.name.toLowerCase().includes(q));
+    if(!files.length) continue;
+    tf+=files.length;
+    files.forEach(f=>{if(f.type==='audio')ta++;if(f.type==='pdf')tp++;if(f.type==='pptx')tpp++;});
+    html+=`
+      <div class="ls">
+        <div class="ls-hdr">
+          <span class="ls-name">${ls.name}</span>
+          <span class="ls-ct">${files.length} dosya</span>
+        </div>
+        <div class="fg">${files.map((f,i)=>cardHTML(f,ls.name,i*30)).join('')}</div>
+      </div>`;
+  }
+
+  if(!html) html=sbox('🔍','Sonuç yok','Farklı bir arama dene veya filtreyi kaldır.');
+  $('main').innerHTML=html;
+  $('stats').innerHTML=`
+    <div class="stat">📚 <b>${lessons.length}</b> ders</div>
+    <div class="stat">📦 <b>${tf}</b> dosya</div>
+    ${ta?`<div class="stat">🎙 <b>${ta}</b> ses kaydı</div>`:''}
+    ${tp?`<div class="stat">📄 <b>${tp}</b> PDF</div>`:''}
+    ${tpp?`<div class="stat">📊 <b>${tpp}</b> slayt</div>`:''}
+  `;
+}
+
+function cardHTML(f,lessonName,delay){
+  const isAudio=f.type==='audio';
+  const clickAttr=isAudio
+    ?`onclick="openAudio('${f.id}','${esc(f.name)}','${esc(lessonName)}')"`
+    :`onclick="openFile('${f.id}','${esc(f.name)}','${f.type}')"`;
+
+  const bottomRow=isAudio
+    ?`<span style="color:var(--green);font-size:.68rem;">▶ Oynat</span>`
+    :`<span class="open-h">↗ Önizle</span>`;
+
+  return `
+    <div class="fc ${f.type}" id="fc-${f.id}" data-id="${f.id}" ${clickAttr} style="animation-delay:${delay}ms;cursor:pointer;">
+      <div class="ft ${f.type}">
+        ${tEmoji(f.type)}
+        <span class="tbadge">${tLabel(f.type)}</span>
+        ${isAudio?`<div class="wave"><span></span><span></span><span></span><span></span></div>`:''}
+      </div>
+      <div class="fi">
+        <div class="fn">${f.name}</div>
+        <div class="fm">
+          <span>${fmtSz(f.size)}</span>
+          ${bottomRow}
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ── Audio → Drive Embed Modal ── */
+function openAudio(id,name,lesson){
+  curDriveUrl=`https://drive.google.com/file/d/${id}/view`;
+  $('modalTitle').textContent=name;
+  $('mFrame').src=`https://drive.google.com/file/d/${id}/preview`;
+  document.querySelector('.modal').classList.add('audio-modal');
+  document.querySelector('.mhdr-ico').textContent='🎙';
+  document.querySelector('.mhdr-ico').style.background='rgba(110,231,183,.1)';
+  document.querySelector('.mhdr-ico').style.borderColor='rgba(110,231,183,.2)';
+  $('nbName').textContent=name;
+  $('nbLesson').textContent=lesson;
+  $('nowBar').classList.add('visible');
+  $('ov').classList.add('open');
+}
+
+/* ── PDF / PPTX Modal ── */
+function openFile(id,name,type){
+  if(type==='pptx'){window.open(`https://drive.google.com/file/d/${id}/view`,'_blank');return;}
+  curDriveUrl=`https://drive.google.com/file/d/${id}/view`;
+  $('modalTitle').textContent=name;
+  document.querySelector('.modal').classList.remove('audio-modal');
+  document.querySelector('.mhdr-ico').textContent='📄';
+  document.querySelector('.mhdr-ico').style.background='rgba(248,113,113,.1)';
+  document.querySelector('.mhdr-ico').style.borderColor='rgba(248,113,113,.2)';
+  $('nowBar').classList.remove('visible');
+  $('mFrame').src=`https://drive.google.com/file/d/${id}/preview`;
+  $('ov').classList.add('open');
+}
+function openDrive(){window.open(curDriveUrl,'_blank');}
+function closeModal(){
+  $('ov').classList.remove('open');
+  $('mFrame').src='about:blank';
+  $('nowBar').classList.remove('visible');
+  document.querySelector('.modal').classList.remove('audio-modal');
+}
+function ovClose(e){if(e.target===$('ov'))closeModal();}
+
+// Now bar butonları — iframe içindeki Drive player'ı kontrol edemeyiz,
+// bu yüzden modal'ı aç/kapat olarak çalışır
+function nbToggle(){$('ov').classList.toggle('open');}
+function nbSeek(){}
+function nbVolume(){}
+function nbMute(){}
+function nbStop(){closeModal();}
+
+/* ── Boot ── */
+loadDrive();
 
 </script>
-
 </body>
 </html>
