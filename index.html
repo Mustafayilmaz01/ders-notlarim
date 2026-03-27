@@ -458,11 +458,18 @@ const $  = id => document.getElementById(id);
 const esc = s => s.replace(/'/g,"&#39;").replace(/"/g,'&quot;');
 
 function fileType(mime,name){
+  // Önce uzantıya bak — Drive bazen m4a'yı video/mp4 olarak yanlış işaretler
   const ext=name.split('.').pop().toLowerCase();
-  if(mime.startsWith('audio/')||['mp3','m4a','wav','ogg','aac','flac'].includes(ext)) return 'audio';
-  if(mime==='application/pdf'||ext==='pdf') return 'pdf';
-  if(mime.includes('presentation')||['pptx','ppt'].includes(ext)) return 'pptx';
+  if(['mp3','m4a','wav','ogg','aac','flac','opus','wma'].includes(ext)) return 'audio';
+  if(mime.startsWith('audio/')) return 'audio';
+  if(ext==='pdf'||mime==='application/pdf') return 'pdf';
+  if(['pptx','ppt'].includes(ext)||mime.includes('presentation')) return 'pptx';
   return 'other';
+}
+function audioMime(name){
+  const ext=name.split('.').pop().toLowerCase();
+  const map={mp3:'audio/mpeg',m4a:'audio/mp4',wav:'audio/wav',ogg:'audio/ogg',aac:'audio/aac',flac:'audio/flac',opus:'audio/ogg'};
+  return map[ext]||'audio/mpeg';
 }
 function tEmoji(t){return{audio:'🎙',pdf:'📄',pptx:'📊',other:'📁'}[t]||'📁';}
 function tLabel(t){return{audio:'SES',pdf:'PDF',pptx:'SLAYT',other:'DOSYA'}[t]||'DOSYA';}
@@ -645,18 +652,15 @@ function audioPlay(e,id,name,lesson){
 
   curId=id;curLesson=lesson;
 
-  // Drive doğrudan stream URL (mp3+m4a çalışır)
   const src=`https://drive.google.com/uc?export=download&id=${id}`;
+  const mime=audioMime(name);
   const a=new Audio();
-
-  // m4a için type hint
-  const ext=name.split('.').pop().toLowerCase();
-  if(ext==='m4a'){
-    const s=document.createElement('source');
-    s.src=src;s.type='audio/mp4';a.appendChild(s);
-  }else{
-    a.src=src;
-  }
+  const source=document.createElement('source');
+  source.src=src;
+  source.type=mime;
+  a.appendChild(source);
+  // fallback src
+  a.src=src;
 
   curAudio=a;
 
