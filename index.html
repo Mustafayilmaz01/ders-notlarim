@@ -5,83 +5,30 @@
 <title>Ders Netflix UI</title>
 
 <style>
-body {
-    margin:0;
-    font-family: Arial;
-    background:#111;
-    color:white;
-}
-
-.container {
-    display:flex;
-    height:100vh;
-}
-
-.sidebar {
-    width:30%;
-    background:#1c1c1c;
-    overflow-y:auto;
-    padding:15px;
-}
-
-.content {
-    width:70%;
-}
-
-iframe {
-    width:100%;
-    height:100%;
-    border:none;
-}
-
-.lesson {
-    padding:10px;
-    margin:5px 0;
-    background:#2c2c2c;
-    cursor:pointer;
-    border-radius:5px;
-}
-
-.lesson:hover {
-    background:#444;
-}
-
-.active {
-    background:#e50914;
-}
-
-.player {
-    position:fixed;
-    bottom:0;
-    left:0;
-    width:30%;
-    background:#000;
-    padding:10px;
-}
-
-button {
-    margin:5px;
-    padding:8px;
-    cursor:pointer;
-}
+body { margin:0; font-family:Arial; background:#111; color:white; }
+.container { display:flex; height:100vh; }
+.sidebar { width:30%; background:#1c1c1c; overflow-y:auto; padding:15px; }
+.content { width:70%; }
+iframe { width:100%; height:100%; border:none; }
+.lesson { padding:10px; margin:5px 0; background:#2c2c2c; cursor:pointer; border-radius:5px; }
+.lesson:hover { background:#444; }
+.active { background:#e50914; }
+.player { position:fixed; bottom:0; left:0; width:30%; background:#000; padding:10px; }
+button { margin:5px; padding:8px; cursor:pointer; }
 </style>
 </head>
 
 <body>
 
 <div class="container">
-
-    <div class="sidebar" id="list"></div>
-
+    <div class="sidebar" id="list">Yükleniyor...</div>
     <div class="content">
         <iframe id="pdfViewer"></iframe>
     </div>
-
 </div>
 
 <div class="player">
-    <audio id="audio" controls></audio>
-    <br>
+    <audio id="audio" controls></audio><br>
     <button onclick="prev()">⏮ Prev</button>
     <button onclick="next()">Next ⏭</button>
 </div>
@@ -95,56 +42,72 @@ let lessons = [];
 let currentIndex = 0;
 
 async function loadFiles() {
-    const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents&key=${API_KEY}`;
+    try {
+        const url = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents+and+trashed=false&fields=files(id,name,mimeType)&key=${API_KEY}`;
 
-    const res = await fetch(url);
-    const data = await res.json();
+        const res = await fetch(url);
+        const data = await res.json();
 
-    const files = data.files;
+        console.log("API RESPONSE:", data);
 
-    let pdfs = {};
-    let audios = {};
-
-    files.forEach(file => {
-        if(file.name.endsWith(".pdf"))
-            pdfs[file.name.replace(".pdf","")] = file.id;
-
-        if(file.name.endsWith(".mp3"))
-            audios[file.name.replace(".mp3","")] = file.id;
-    });
-
-    for(let key in pdfs){
-        if(audios[key]){
-            lessons.push({
-                name:key,
-                pdf:pdfs[key],
-                audio:audios[key]
-            });
+        if(!data.files){
+            document.getElementById("list").innerHTML = "❌ API veri çekemedi";
+            return;
         }
-    }
 
-    renderList();
-    loadLesson(0);
+        let pdfs = {};
+        let audios = {};
+
+        data.files.forEach(file => {
+            if(file.mimeType === "application/pdf"){
+                pdfs[file.name.replace(".pdf","")] = file.id;
+            }
+
+            if(file.mimeType.includes("audio")){
+                audios[file.name.replace(".mp3","")] = file.id;
+            }
+        });
+
+        for(let key in pdfs){
+            if(audios[key]){
+                lessons.push({
+                    name:key,
+                    pdf:pdfs[key],
+                    audio:audios[key]
+                });
+            }
+        }
+
+        if(lessons.length === 0){
+            document.getElementById("list").innerHTML =
+                "❌ Eşleşen PDF + MP3 bulunamadı<br><br>Dosya isimleri aynı olmalı!";
+            return;
+        }
+
+        renderList();
+        loadLesson(0);
+
+    } catch(e){
+        console.error(e);
+        document.getElementById("list").innerHTML = "❌ Hata oluştu";
+    }
 }
 
 function renderList(){
     const list = document.getElementById("list");
-    list.innerHTML="";
+    list.innerHTML = "";
 
     lessons.forEach((l,i)=>{
         const div = document.createElement("div");
         div.className="lesson";
         div.innerText = l.name;
-
         div.onclick = ()=> loadLesson(i);
-
         list.appendChild(div);
     });
 }
 
 function loadLesson(index){
     currentIndex = index;
-
     const l = lessons[index];
 
     document.getElementById("pdfViewer").src =
@@ -158,15 +121,11 @@ function loadLesson(index){
 }
 
 function next(){
-    if(currentIndex < lessons.length-1){
-        loadLesson(currentIndex+1);
-    }
+    if(currentIndex < lessons.length-1) loadLesson(currentIndex+1);
 }
 
 function prev(){
-    if(currentIndex > 0){
-        loadLesson(currentIndex-1);
-    }
+    if(currentIndex > 0) loadLesson(currentIndex-1);
 }
 
 loadFiles();
