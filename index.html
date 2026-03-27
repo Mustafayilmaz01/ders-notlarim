@@ -308,6 +308,7 @@ header{
   display:flex;flex-direction:column;overflow:hidden;
   animation:modalIn .25s ease;
 }
+.modal.audio-modal{max-width:520px;height:220px;}
 @keyframes modalIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
 .mhdr{
   display:flex;align-items:center;justify-content:space-between;
@@ -458,18 +459,12 @@ const $  = id => document.getElementById(id);
 const esc = s => s.replace(/'/g,"&#39;").replace(/"/g,'&quot;');
 
 function fileType(mime,name){
-  // Önce uzantıya bak — Drive bazen m4a'yı video/mp4 olarak yanlış işaretler
   const ext=name.split('.').pop().toLowerCase();
-  if(['mp3','m4a','wav','ogg','aac','flac','opus','wma'].includes(ext)) return 'audio';
-  if(mime.startsWith('audio/')) return 'audio';
+  if(['mp3','m4a','wav','ogg','aac','flac','opus','wma','mp4','mkv','avi','mov','webm'].includes(ext)) return 'audio';
+  if(mime.startsWith('audio/')||mime.startsWith('video/')) return 'audio';
   if(ext==='pdf'||mime==='application/pdf') return 'pdf';
   if(['pptx','ppt'].includes(ext)||mime.includes('presentation')) return 'pptx';
   return 'other';
-}
-function audioMime(name){
-  const ext=name.split('.').pop().toLowerCase();
-  const map={mp3:'audio/mpeg',m4a:'audio/mp4',wav:'audio/wav',ogg:'audio/ogg',aac:'audio/aac',flac:'audio/flac',opus:'audio/ogg'};
-  return map[ext]||'audio/mpeg';
 }
 function tEmoji(t){return{audio:'🎙',pdf:'📄',pptx:'📊',other:'📁'}[t]||'📁';}
 function tLabel(t){return{audio:'SES',pdf:'PDF',pptx:'SLAYT',other:'DOSYA'}[t]||'DOSYA';}
@@ -598,27 +593,16 @@ function render(){
 
 function cardHTML(f,lessonName,delay){
   const isAudio=f.type==='audio';
-  const playing=curId===f.id;
-
   const clickAttr=isAudio
-    ?`onclick="audioPlay(event,'${f.id}','${esc(f.name)}','${esc(lessonName)}')"`
+    ?`onclick="openAudio('${f.id}','${esc(f.name)}','${esc(lessonName)}')"`
     :`onclick="openFile('${f.id}','${esc(f.name)}','${f.type}')"`;
 
-  const playerHTML=isAudio?`
-    <div class="ap">
-      <div class="apc">
-        <button class="pbtn" id="pb-${f.id}">
-          <svg viewBox="0 0 24 24" width="11" height="11">${playing?pa():pi()}</svg>
-        </button>
-        <div class="pw" onclick="cardSeek(event,'${f.id}')">
-          <div class="pb" id="bar-${f.id}" style="width:${playing?(curAudio.currentTime/curAudio.duration*100||0)+'%':'0%'}"></div>
-        </div>
-        <span class="at" id="at-${f.id}">${playing?fmt(curAudio.currentTime)+' / '+fmt(curAudio.duration):'0:00'}</span>
-      </div>
-    </div>`:'' ;
+  const bottomRow=isAudio
+    ?`<span style="color:var(--green);font-size:.68rem;">▶ Oynat</span>`
+    :`<span class="open-h">↗ Önizle</span>`;
 
   return `
-    <div class="fc ${f.type}${playing?' playing':''}" id="fc-${f.id}" data-id="${f.id}" ${clickAttr} style="animation-delay:${delay}ms">
+    <div class="fc ${f.type}" id="fc-${f.id}" data-id="${f.id}" ${clickAttr} style="animation-delay:${delay}ms;cursor:pointer;">
       <div class="ft ${f.type}">
         ${tEmoji(f.type)}
         <span class="tbadge">${tLabel(f.type)}</span>
@@ -628,147 +612,60 @@ function cardHTML(f,lessonName,delay){
         <div class="fn">${f.name}</div>
         <div class="fm">
           <span>${fmtSz(f.size)}</span>
-          ${!isAudio?'<span class="open-h">↗ Önizle</span>':''}
+          ${bottomRow}
         </div>
       </div>
-      ${playerHTML}
     </div>`;
 }
 
-/* ── Audio Engine ── */
-function audioPlay(e,id,name,lesson){
-  e.stopPropagation();
-
-  // Aynı ses → toggle pause/play
-  if(curId===id){
-    if(curAudio.paused){curAudio.play();nbSetPlaying(true);}
-    else{curAudio.pause();nbSetPlaying(false);}
-    return;
-  }
-
-  // Yeni ses
-  if(curAudio){curAudio.pause();curAudio.src='';}
-  markCard(curId,false);
-
-  curId=id;curLesson=lesson;
-
-  const src=`https://drive.google.com/uc?export=download&id=${id}`;
-  const mime=audioMime(name);
-  const a=new Audio();
-  const source=document.createElement('source');
-  source.src=src;
-  source.type=mime;
-  a.appendChild(source);
-  // fallback src
-  a.src=src;
-
-  curAudio=a;
-
-  a.addEventListener('timeupdate',audioTick);
-  a.addEventListener('ended',()=>{nbSetPlaying(false);markCard(id,false);});
-  a.addEventListener('error',()=>{
-    // Fallback: preview URL üzerinden dene
-    a.src=`https://drive.google.com/file/d/${id}/view`;
-  });
-
-  a.volume=$('nbVol').value;
-  a.play().catch(()=>{});
-
-  // UI
-  markCard(id,true);
-  nbShow(name,lesson);
-  nbSetPlaying(true);
-
-  // Card play button update
-  updateCardBtn(id,false);
-}
-
-function audioTick(){
-  if(!curAudio) return;
-  const pct=curAudio.currentTime/curAudio.duration*100||0;
-  const timeStr=fmt(curAudio.currentTime)+' / '+fmt(curAudio.duration);
-
-  // card
-  const bar=document.getElementById('bar-'+curId);
-  const at =document.getElementById('at-'+curId);
-  if(bar) bar.style.width=pct+'%';
-  if(at)  at.textContent=timeStr;
-
-  // now bar
-  $('nbPb').style.width=pct+'%';
-  $('nbCur').textContent=fmt(curAudio.currentTime);
-  $('nbDur').textContent=fmt(curAudio.duration);
-}
-
-function cardSeek(e,id){
-  e.stopPropagation();
-  if(curId!==id||!curAudio?.duration) return;
-  const r=e.currentTarget.getBoundingClientRect();
-  curAudio.currentTime=((e.clientX-r.left)/r.width)*curAudio.duration;
-}
-
-function markCard(id,playing){
-  if(!id) return;
-  const card=document.getElementById('fc-'+id);
-  if(!card) return;
-  card.classList.toggle('playing',playing);
-  updateCardBtn(id,!playing);
-}
-function updateCardBtn(id,isPaused){
-  const btn=document.querySelector(`#pb-${id} svg`);
-  if(btn) btn.innerHTML=isPaused?pi():pa();
-}
-
-/* ── Now Playing Bar ── */
-function nbShow(name,lesson){
+/* ── Audio → Drive Embed Modal ── */
+function openAudio(id,name,lesson){
+  curDriveUrl=`https://drive.google.com/file/d/${id}/view`;
+  $('modalTitle').textContent=name;
+  $('mFrame').src=`https://drive.google.com/file/d/${id}/preview`;
+  document.querySelector('.modal').classList.add('audio-modal');
+  document.querySelector('.mhdr-ico').textContent='🎙';
+  document.querySelector('.mhdr-ico').style.background='rgba(110,231,183,.1)';
+  document.querySelector('.mhdr-ico').style.borderColor='rgba(110,231,183,.2)';
   $('nbName').textContent=name;
   $('nbLesson').textContent=lesson;
   $('nowBar').classList.add('visible');
-}
-function nbSetPlaying(playing){
-  const svg=$('nbPlayBtn').querySelector('svg');
-  if(svg) svg.innerHTML=playing?pa():pi();
-  markCard(curId,playing);
-  updateCardBtn(curId,!playing);
-}
-function nbToggle(){
-  if(!curAudio) return;
-  if(curAudio.paused){curAudio.play();nbSetPlaying(true);}
-  else{curAudio.pause();nbSetPlaying(false);}
-}
-function nbSeek(e){
-  if(!curAudio?.duration) return;
-  const r=$('nbPw').getBoundingClientRect();
-  curAudio.currentTime=((e.clientX-r.left)/r.width)*curAudio.duration;
-}
-function nbVolume(v){if(curAudio) curAudio.volume=v;}
-function nbMute(){
-  if(!curAudio) return;
-  curAudio.muted=!curAudio.muted;
-  $('nbVol').parentElement.querySelector('.nb-vol-ico').textContent=curAudio.muted?'🔇':'🔊';
-}
-function nbStop(){
-  if(curAudio){curAudio.pause();curAudio.src='';}
-  markCard(curId,false);
-  curAudio=null;curId=null;curLesson='';
-  $('nowBar').classList.remove('visible');
-  $('nbPb').style.width='0%';
+  $('ov').classList.add('open');
 }
 
-/* ── PDF / File Modal ── */
+/* ── PDF / PPTX Modal ── */
 function openFile(id,name,type){
   if(type==='pptx'){window.open(`https://drive.google.com/file/d/${id}/view`,'_blank');return;}
   curDriveUrl=`https://drive.google.com/file/d/${id}/view`;
   $('modalTitle').textContent=name;
+  document.querySelector('.modal').classList.remove('audio-modal');
+  document.querySelector('.mhdr-ico').textContent='📄';
+  document.querySelector('.mhdr-ico').style.background='rgba(248,113,113,.1)';
+  document.querySelector('.mhdr-ico').style.borderColor='rgba(248,113,113,.2)';
+  $('nowBar').classList.remove('visible');
   $('mFrame').src=`https://drive.google.com/file/d/${id}/preview`;
   $('ov').classList.add('open');
 }
 function openDrive(){window.open(curDriveUrl,'_blank');}
-function closeModal(){$('ov').classList.remove('open');$('mFrame').src='about:blank';}
+function closeModal(){
+  $('ov').classList.remove('open');
+  $('mFrame').src='about:blank';
+  $('nowBar').classList.remove('visible');
+  document.querySelector('.modal').classList.remove('audio-modal');
+}
 function ovClose(e){if(e.target===$('ov'))closeModal();}
+
+// Now bar butonları — iframe içindeki Drive player'ı kontrol edemeyiz,
+// bu yüzden modal'ı aç/kapat olarak çalışır
+function nbToggle(){$('ov').classList.toggle('open');}
+function nbSeek(){}
+function nbVolume(){}
+function nbMute(){}
+function nbStop(){closeModal();}
 
 /* ── Boot ── */
 loadDrive();
+
 </script>
 </body>
 </html>
